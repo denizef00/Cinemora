@@ -1,4 +1,5 @@
 import 'package:cinemora/auth/login.dart';
+import 'package:cinemora/auth/signup.dart';
 import 'package:cinemora/pages/info_view/movieinfo_view.dart';
 import 'package:cinemora/pages/info_view/tvseriesinfo_view.dart';
 import 'package:flutter/material.dart';
@@ -25,13 +26,28 @@ class _SearchViewState extends ConsumerState<SearchView> {
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 50),
       child: Column(
         children: [
-          OutlinedButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (context) => LoginPage()));
-            },
-            child: Text('Login Test'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (context) => LoginPage()));
+                },
+                child: Text('Login Test'),
+              ),
+              SizedBox(width: 20),
+
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (context) => SignupPage()));
+                },
+                child: Text('SignUp Test'),
+              ),
+            ],
           ),
           //searchbar
           Container(
