@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607004529726",
+    "project_id": "cinemora-63661",
+    "storage_bucket": "cinemora-63661.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607004529726:android:4fae4078963ff513efed6f",
+        "android_client_info": {
+          "package_name": "com.example.cinemora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOKWQNFOtcQZSSQgMk-PPHMtVw5WW07vo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

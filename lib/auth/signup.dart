@@ -1,4 +1,5 @@
 import 'package:cinemora/auth/login.dart';
+import 'package:cinemora/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -9,6 +10,57 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _correctPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  void _handleSignUp() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty ||
+        _usernameController.text.trim().isEmpty ||
+        _correctPasswordController.text.trim().isEmpty) {
+      if (_passwordController.text.trim() !=
+          _correctPasswordController.text.trim()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please fill this all this sections!')),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Passwords not matched!!')));
+      }
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        username: _usernameController.text.trim(),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Succesfully Sign Up!')));
+      }
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed Sign Up! : ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +68,7 @@ class _SignupPageState extends State<SignupPage> {
       body: Align(
         alignment: Alignment.center,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 300),
+          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 250),
           child: Container(
             alignment: Alignment.center,
             width: double.infinity,
@@ -51,6 +103,46 @@ class _SignupPageState extends State<SignupPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
+                        controller: _usernameController,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          fontSize: 15,
+                        ),
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 5,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                          ),
+
+                          hintText: "Username",
+                          hintStyle: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.tertiary.withOpacity(0.5),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    alignment: Alignment.center,
+                    height: 40,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: TextField(
+                        controller: _emailController,
                         maxLines: 1,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.tertiary,
@@ -88,6 +180,7 @@ class _SignupPageState extends State<SignupPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
+                        controller: _passwordController,
                         obscureText: true,
 
                         maxLines: 1,
@@ -127,6 +220,7 @@ class _SignupPageState extends State<SignupPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
+                        controller: _correctPasswordController,
                         obscureText: true,
 
                         maxLines: 1,
@@ -156,22 +250,22 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        alignment: Alignment.center,
-                        height: 35,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.deepPurple,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text('Sign Up'),
+                  GestureDetector(
+                    onTap: _isLoading ? null : _handleSignUp,
+                    child: Container(
+                      alignment: Alignment.center,
+                      height: 35,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple,
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      child: _isLoading
+                          ? CircularProgressIndicator()
+                          : Text('Sign Up'),
                     ),
                   ),
+
                   SizedBox(height: 10),
 
                   Row(

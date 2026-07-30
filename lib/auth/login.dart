@@ -1,4 +1,5 @@
 import 'package:cinemora/auth/signup.dart';
+import 'package:cinemora/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,6 +10,43 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  void _handleLogin() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter your email and password!')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Successfully Login!!')));
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}!!')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
+                        controller: _emailController,
                         maxLines: 1,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.tertiary,
@@ -88,6 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: TextField(
+                        controller: _passwordController,
                         obscureText: true,
 
                         maxLines: 1,
@@ -120,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: _isLoading ? null : _handleLogin,
                       child: Container(
                         alignment: Alignment.center,
                         height: 35,
@@ -129,7 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.deepPurple,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text('Login'),
+                        child: _isLoading
+                            ? CircularProgressIndicator()
+                            : Text('Login'),
                       ),
                     ),
                   ),
