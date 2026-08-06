@@ -1,275 +1,328 @@
+import 'package:cinemora/services/tmdb_services.dart';
 import 'package:flutter/material.dart';
 
 class MovieInfo extends StatefulWidget {
-  final String title;
-  final String overview;
-  final String year;
-  final String type;
-  final String rating;
-  final String time;
-  final Map<String, String> cast;
-  final bool status;
-  const MovieInfo({
-    super.key,
-    required this.title,
-    required this.overview,
-    required this.year,
-    required this.type,
-    required this.rating,
-    required this.time,
-    required this.cast,
-    required this.status,
-  });
+  final int movieId;
+  const MovieInfo({super.key, required this.movieId});
 
   @override
   State<MovieInfo> createState() => _MovieInfoState();
 }
 
 class _MovieInfoState extends State<MovieInfo> {
-  List<String> keys = [];
+  late Future<Map<String, dynamic>> _movieDetailsFuture;
   @override
   void initState() {
     super.initState();
-    keys = widget.cast.keys.toList();
+    _movieDetailsFuture = TmdbApiService().getMovieDetails(widget.movieId);
+  }
+
+  String _formatRuntime(int? minutes) {
+    if (minutes == null || minutes == 0) return 'Bilinmiyor';
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    return '${hours}h ${remainingMinutes}m';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.topLeft,
-                  children: [
-                    Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.red,
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _movieDetailsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Film detayları yüklenemedi.'),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Geri Dön'),
+                  ),
+                ],
+              ),
+            );
+          }
+          final movie = snapshot.data!;
+          final String title = movie['title'] ?? '';
+          final int runtimeMinutes = movie['runtime'] ?? 0;
+          final String formattedTime = _formatRuntime(runtimeMinutes);
+          final String releaseDate = movie['release_date'] ?? 'Bilinmiyor';
+          final String status = movie['status'] == 'Released'
+              ? 'Released'
+              : 'Upcoming';
+          final double voteAverage =
+              (movie['vote_average'] as num?)?.toDouble() ?? 0.0;
+          final String rating = '%${(voteAverage * 10).toInt()}';
+          final String overview = movie['overview'] ?? '';
+          final String? backdropPath = movie['backdrop_path'];
+
+          final List genresList = movie['genres'] ?? [];
+          final String type = genresList.isNotEmpty
+              ? genresList.map((g) => g['name']).take(2).join(', ')
+              : 'Movie';
+
+          final String backdropUrl =
+              backdropPath != null && backdropPath.isNotEmpty
+              ? 'https://image.tmdb.org/t/p/w780$backdropPath'
+              : '';
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Stack(
+                    alignment: Alignment.topLeft,
+                    children: [
+                      Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          Container(
+                            height: 200,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.red,
+                              image: backdropUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(backdropUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.85),
+                                  ],
+                                ),
                               ),
-                              child: _movietopCard(
-                                widget.title,
-                                widget.time,
-                                widget.status,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '$formattedTime • ${status}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        Row(
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.favorite_border,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Add Fav Button')),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "Add Library",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Show Details',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$releaseDate • $type',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.redAccent,
+                            width: 2.5,
+                          ),
+                        ),
+                        child: Text(
+                          rating,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+                  const Divider(color: Colors.white24),
+
+                  GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text("Watch Trailer")));
+                    },
+                    child: Container(
+                      alignment: Alignment.centerLeft,
+                      height: 80,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.transparent,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 10,
+                            Container(
+                              height: 60,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.amber,
                               ),
-                              child: IconButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                icon: Icon(Icons.arrow_back_ios_rounded),
-                                iconSize: 25,
+                              child: Icon(Icons.play_arrow_rounded),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Watch Trailer',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 5),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 10,
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Add Fav Button')),
-                              );
-                            },
-                            icon: Icon(Icons.favorite_border),
-                            iconSize: 30,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                _detailsPage(widget.year, widget.type, widget.rating),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget? _movietopCard(String title, String time, bool status) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-          textAlign: TextAlign.start,
-        ),
-        SizedBox(height: 5),
-        Row(
-          children: [
-            Text(
-              time,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300),
-              textAlign: TextAlign.start,
-            ),
-            SizedBox(width: 10),
-
-            Text(
-              " • ",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300),
-              textAlign: TextAlign.start,
-            ),
-            SizedBox(width: 10),
-            Text(
-              !status ? "Unwatch" : "Already watch",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w300),
-              textAlign: TextAlign.start,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _detailsPage(String year, String type, String rating) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          alignment: Alignment.centerRight,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Show Details",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: 1),
-                Row(
-                  children: [
-                    Text(
-                      year,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w100,
                       ),
                     ),
-                    SizedBox(width: 5),
-                    Text(
-                      "•",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w100,
-                      ),
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      type,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w100,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Container(
-              alignment: Alignment.center,
-              height: 45,
-              width: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.transparent,
-                border: Border.all(color: Colors.red, width: 3),
-              ),
-              child: Text(
-                rating,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 5),
-        Divider(height: 1, color: Theme.of(context).colorScheme.onTertiary),
-        SizedBox(height: 5),
-
-        GestureDetector(
-          onTap: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Watch Trailer")));
-          },
-          child: Container(
-            alignment: Alignment.centerLeft,
-            height: 80,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.transparent,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  Container(
-                    height: 60,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.amber,
-                    ),
-                    child: Icon(Icons.play_arrow_rounded),
                   ),
-                  SizedBox(width: 10),
-                  Text(
-                    'Watch Trailer',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+
+                  const Divider(color: Colors.white24),
+                  const SizedBox(height: 16),
+                  Center(child: Text('Cast')),
+                  const SizedBox(height: 20),
+                  const Divider(color: Colors.white24),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Overview',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161F33),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      overview.isNotEmpty ? overview : 'Açıklama bulunmuyor.',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        SizedBox(height: 5),
-        Divider(height: 1, color: Theme.of(context).colorScheme.onTertiary),
-        SizedBox(height: 5),
-        _actorCard(),
-        SizedBox(height: 5),
-        Divider(height: 1, color: Theme.of(context).colorScheme.onTertiary),
-        SizedBox(height: 5),
-        _overviewCard(widget.overview),
-
-        SizedBox(height: 100),
-      ],
+          );
+        },
+      ),
     );
   }
 
+  /*
   SizedBox _actorCard() {
     return SizedBox(
       height: 160,
@@ -330,34 +383,5 @@ class _MovieInfoState extends State<MovieInfo> {
         },
       ),
     );
-  }
-
-  Column _overviewCard(String overviewText) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Overview",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        SizedBox(height: 5),
-        Container(
-          height: 100,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              overviewText,
-              maxLines: 5,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  }*/
 }

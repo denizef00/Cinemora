@@ -1,4 +1,5 @@
 import 'package:cinemora/pages/info_view/movieinfo_view.dart';
+import 'package:cinemora/services/tmdb_services.dart';
 import 'package:flutter/material.dart';
 
 class MovieView extends StatelessWidget {
@@ -26,7 +27,7 @@ class MovieView extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
+                      horizontal: 5,
                       vertical: 20,
                     ),
                     child: SingleChildScrollView(
@@ -35,52 +36,27 @@ class MovieView extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              _movieCard(
-                                context,
-                                title: "The Batman",
-                                overview:
-                                    "In his second year of fighting crime, Batman uncovers corruption in Gotham City that connects to his own family while facing a serial killer known as the Riddler.",
-                                year: "04/03/2022",
-                                type: "Crime, Mystery, and Thriller",
-                                rating: "%77",
-                                time: "2h 57m",
-                                cast: {
-                                  "Robert Pattinson":
-                                      "Bruce Wayne / The Batman",
-                                  "Zoë Kravitz": "Selina Kyle",
-                                  "Jeffrey Wright": "Lt. James Gordon",
-                                  "Colin Farrell": "Oz / The Penguin",
-                                  "Paul Dano": "The Riddler",
-                                },
-                                status: false,
-                              ),
+                              _movieCard(context, id: 634649),
                               SizedBox(width: 10),
-                              _movieCard(
-                                context,
-                                title: "Toy Story 5 ",
-                                overview:
-                                    "When Bonnie receives a Lilypad tablet as a gift and becomes obsessed, Buzz, Woody, Jessie and the rest of the gang's jobs become exponentially harder when they have to go head to head with the all-new threat to playtime.",
-                                year: "19/06/2026",
-                                type:
-                                    "Animation, Family, Comedy, and Adventure",
-                                rating: "%74",
-                                time: "1h 42m",
-                                cast: {
-                                  "Tom Hanks": "Woody (voice)",
-                                  "Tim Allen": "Buzz Lightyear (voice)",
-                                  "Joan Cusack": "Jessie (voice)",
-                                  "Greta Lee": "Lilypad (voice)",
-                                  "Conan O'Brien": "Smarty Pants (voice)",
-                                  "Craig Robinson": "Atlas (voice)",
-                                },
-                                status: false,
-                              ),
+                              _movieCard(context, id: 550),
+                              SizedBox(width: 10),
+                              _movieCard(context, id: 157336),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+
+                          Row(
+                            children: [
+                              _movieCard(context, id: 27205),
+                              SizedBox(width: 10),
+                              _movieCard(context, id: 155),
                             ],
                           ),
                         ],
                       ),
                     ),
                   ),
+                  Center(child: Text('History')),
                 ],
               ),
             ),
@@ -90,59 +66,74 @@ class MovieView extends StatelessWidget {
     );
   }
 
-  Stack _movieCard(
-    BuildContext context, {
-    required String title,
-    required String overview,
-    required String year,
-    required String type,
-    required String rating,
-    required String time,
-    required Map<String, String> cast,
-    required bool status,
-  }) {
-    return Stack(
-      alignment: Alignment.topRight,
-      children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => MovieInfo(
-                  title: title,
-                  overview: overview,
-                  year: year,
-                  type: type,
-                  rating: rating,
-                  time: time,
-                  cast: cast,
-                  status: status,
+  Widget _movieCard(BuildContext context, {required int id}) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: TmdbApiService().getMovieDetails(id),
+      builder: (context, snapshot) {
+        String? posterPath;
+
+        if (snapshot.hasData) {
+          posterPath = snapshot.data!['poster_path'];
+        }
+
+        final String? posterUrl = posterPath != null
+            ? 'https://image.tmdb.org/t/p/w500$posterPath'
+            : null;
+
+        return Stack(
+          alignment: Alignment.topRight,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => MovieInfo(movieId: id),
+                  ),
+                );
+              },
+              child: Container(
+                alignment: Alignment.topLeft,
+                height: 200,
+                width: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.red,
+                  image: posterUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(posterUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.6),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            );
-          },
-          child: Container(
-            alignment: Alignment.topLeft,
-            height: 200,
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.red,
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-          child: IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.check_circle_outline_outlined,
-              color: Colors.white,
-              size: 25,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.check_circle_outline_outlined,
+                  color: Colors.white,
+                  size: 25,
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

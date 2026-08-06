@@ -9,7 +9,7 @@ class MainPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      //appBar: _appBarView(),
+
       body: navigationShell,
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
