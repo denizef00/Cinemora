@@ -1,3 +1,7 @@
+import 'package:cinemora/auth/login.dart';
+import 'package:cinemora/auth/signup.dart';
+import 'package:cinemora/pages/info_view/movieinfo_view.dart';
+import 'package:cinemora/pages/info_view/tvseriesinfo_view.dart';
 import 'package:cinemora/pages/main_page.dart';
 import 'package:cinemora/pages/movie_view/movie_view.dart';
 import 'package:cinemora/pages/news_view/news_view.dart';
@@ -16,12 +20,42 @@ class AppRoutes {
   static const String search = "/";
   static const String news = "/news";
   static const String profile = "/profile";
+  static const String login = "/login";
+  static const String signup = "/signup";
+  static const String tvInfo = "/tv-info/:id";
+  static const String movieInfo = "/movie-info/:id";
 }
 
 final router = GoRouter(
   initialLocation: AppRoutes.search,
   navigatorKey: _rooterKey,
   routes: [
+    GoRoute(
+      parentNavigatorKey: _rooterKey,
+      path: AppRoutes.login,
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rooterKey,
+      path: AppRoutes.signup,
+      builder: (context, state) => const SignupPage(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rooterKey,
+      path: AppRoutes.tvInfo,
+      builder: (context, state) {
+        final tvId = int.parse(state.pathParameters['id']!);
+        return TvSeriesInfo(tvId: tvId);
+      },
+    ),
+    GoRoute(
+      parentNavigatorKey: _rooterKey,
+      path: AppRoutes.movieInfo,
+      builder: (context, state) {
+        final movieId = int.parse(state.pathParameters['id']!);
+        return MovieInfo(movieId: movieId);
+      },
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainPage(navigationShell: navigationShell),
@@ -34,6 +68,7 @@ final router = GoRouter(
             ),
           ],
         ),
+
         StatefulShellBranch(
           routes: [
             GoRoute(

@@ -1,4 +1,6 @@
+import 'package:cinemora/services/database_services.dart';
 import 'package:cinemora/services/tmdb_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class MovieInfo extends StatefulWidget {
@@ -63,7 +65,7 @@ class _MovieInfoState extends State<MovieInfo> {
           final String rating = '%${(voteAverage * 10).toInt()}';
           final String overview = movie['overview'] ?? '';
           final String? backdropPath = movie['backdrop_path'];
-
+          final String? posterPath = movie['poster_path'];
           final List genresList = movie['genres'] ?? [];
           final String type = genresList.isNotEmpty
               ? genresList.map((g) => g['name']).take(2).join(', ')
@@ -73,7 +75,14 @@ class _MovieInfoState extends State<MovieInfo> {
               backdropPath != null && backdropPath.isNotEmpty
               ? 'https://image.tmdb.org/t/p/w780$backdropPath'
               : '';
-
+          final Map<String, dynamic> mediaData = {
+            'id': widget.movieId,
+            'title': title,
+            'posterPath': posterPath ?? '',
+            'backdropPath': backdropPath ?? '',
+            'voteAverage': voteAverage,
+            'mediaType': 'movie',
+          };
           return SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -156,15 +165,44 @@ class _MovieInfoState extends State<MovieInfo> {
                       Positioned(
                         top: 8,
                         right: 8,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
-                            size: 28,
+                        child: StreamBuilder<bool>(
+                          stream: DatabaseServices().isFavoriteStream(
+                            widget.movieId,
                           ),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Add Fav Button')),
+                          builder: (context, snapshot) {
+                            final isFav = snapshot.data ?? false;
+
+                            return IconButton(
+                              icon: Icon(
+                                size: 28,
+
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isFav
+                                    ? Theme.of(context).colorScheme.onSecondary
+                                    : Theme.of(context).colorScheme.tertiary,
+                              ),
+                              onPressed: () async {
+                                final isAdded = await DatabaseServices()
+                                    .toggleFavorite(mediaData: mediaData);
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isAdded
+                                            ? 'Added to Favorites!'
+                                            : 'Removed from Favorites!',
+                                      ),
+                                      duration: const Duration(seconds: 1),
+                                      backgroundColor: isAdded
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.errorContainer
+                                          : Theme.of(context).colorScheme.error,
+                                    ),
+                                  );
+                                }
+                              },
                             );
                           },
                         ),
@@ -184,7 +222,9 @@ class _MovieInfoState extends State<MovieInfo> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        showAddToListBottomSheet(context, mediaData: mediaData);
+                      },
                       child: Text(
                         "Add Library",
                         style: TextStyle(
@@ -322,8 +362,145 @@ class _MovieInfoState extends State<MovieInfo> {
     );
   }
 
-  /*
-  SizedBox _actorCard() {
+  void showAddToListBottomSheet(
+    BuildContext context, {
+    required Map<String, dynamic> mediaData,
+  }) {
+    final DatabaseServices dbService = DatabaseServices();
+    final String mediaType = mediaData['mediaType'] ?? '';
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Add to Library"),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              SizedBox(height: 10),
+
+              StreamBuilder<QuerySnapshot>(
+                stream: dbService.getUserLists(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'No list found. Please login or create a list.',
+                      ),
+                    );
+                  }
+
+                  final filteredLists = snapshot.data!.docs.where((doc) {
+                    final listData = doc.data() as Map<String, dynamic>;
+                    final String listType = listData['type'] ?? '';
+
+                    if (mediaType == 'tv' && listType == 'movie') {
+                      return false;
+                    }
+
+                    if (mediaType == 'movie' && listType == 'tv') {
+                      return false;
+                    }
+
+                    return true;
+                  }).toList();
+
+                  if (filteredLists.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Uygun bir liste bulunamadı.'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredLists.length,
+                    itemBuilder: (context, index) {
+                      final listDoc = filteredLists[index];
+                      final listData = listDoc.data() as Map<String, dynamic>;
+                      final listName = listData['name'] ?? 'List';
+
+                      return ListTile(
+                        leading: Icon(
+                          _getIconForList(listData['type']),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(listName),
+                        trailing: const Icon(Icons.add, size: 20),
+                        onTap: () async {
+                          try {
+                            await dbService.addMediaToList(
+                              listId: listDoc.id,
+                              mediaData: mediaData,
+                            );
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Added to "$listName" successfully!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to add: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  IconData? _getIconForList(String? type) {
+    switch (type) {
+      case 'tv':
+        return Icons.tv;
+      case 'movie':
+        return Icons.movie_outlined;
+      case 'fav':
+        return Icons.favorite;
+      default:
+        return Icons.bookmark_border;
+    }
+  }
+
+  /*SizedBox _actorCard() {
     return SizedBox(
       height: 160,
       child: ListView.builder(

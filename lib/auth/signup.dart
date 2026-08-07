@@ -1,4 +1,5 @@
 import 'package:cinemora/auth/login.dart';
+import 'package:cinemora/pages/profile_view/profile_view.dart';
 import 'package:cinemora/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
@@ -49,7 +50,10 @@ class _SignupPageState extends State<SignupPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('Succesfully Sign Up!')));
       }
-      Navigator.pop(context);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => ProfileView()),
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

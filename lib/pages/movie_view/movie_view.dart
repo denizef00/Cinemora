@@ -1,12 +1,16 @@
-import 'package:cinemora/pages/info_view/movieinfo_view.dart';
+import 'package:cinemora/services/database_services.dart';
 import 'package:cinemora/services/tmdb_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MovieView extends StatelessWidget {
   const MovieView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
     return DefaultTabController(
       length: 2,
       child: Padding(
@@ -23,50 +27,132 @@ class MovieView extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: TabBarView(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 20,
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              _movieCard(context, id: 634649),
-                              SizedBox(width: 10),
-                              _movieCard(context, id: 550),
-                              SizedBox(width: 10),
-                              _movieCard(context, id: 157336),
-                            ],
-                          ),
-                          SizedBox(height: 10),
-
-                          Row(
-                            children: [
-                              _movieCard(context, id: 27205),
-                              SizedBox(width: 10),
-                              _movieCard(context, id: 155),
-                            ],
-                          ),
-                        ],
+              child: currentUser == null
+                  ? const Center(
+                      child: Text(
+                        "Kütüphanenizi görmek için lütfen giriş yapın.",
+                        style: TextStyle(color: Colors.grey),
                       ),
+                    )
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(currentUser.uid)
+                          .collection('lists')
+                          .where('type', isEqualTo: 'movie')
+                          .snapshots(),
+                      builder: (context, listSnapshot) {
+                        if (listSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (!listSnapshot.hasData ||
+                            listSnapshot.data!.docs.isEmpty) {
+                          return const Center(
+                            child: Text("Movies listesi bulunamadı."),
+                          );
+                        }
+                        final movieListDocId = listSnapshot.data!.docs.first.id;
+
+                        return StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(currentUser.uid)
+                              .collection('lists')
+                              .doc(movieListDocId)
+                              .collection('items')
+                              .orderBy('addedAt', descending: true)
+                              .snapshots(),
+
+                          builder: (context, itemsSnapshot) {
+                            if (itemsSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            final allMovieDocs = itemsSnapshot.data?.docs ?? [];
+
+                            final unwatchMovies = allMovieDocs.where((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              return (data['isWatched'] ?? false) == false;
+                            }).toList();
+
+                            final historyMovies = allMovieDocs.where((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              return (data['isWatched'] ?? false) == true;
+                            }).toList();
+                            return TabBarView(
+                              children: [
+                                _buildMovieGrid(
+                                  context,
+                                  movies: unwatchMovies,
+                                  emptyMessage: "İzlenecek film bulunmuyor.",
+                                  isHistoryTab: false,
+                                ),
+
+                                _buildMovieGrid(
+                                  context,
+                                  movies: historyMovies,
+                                  emptyMessage: "Henüz izlenen bir film yok.",
+                                  isHistoryTab: true,
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
-                  ),
-                  Center(child: Text('History')),
-                ],
-              ),
             ),
+            Center(child: Text('History')),
           ],
         ),
       ),
     );
   }
 
-  Widget _movieCard(BuildContext context, {required int id}) {
+  Widget _buildMovieGrid(
+    BuildContext context, {
+    required List<QueryDocumentSnapshot> movies,
+    required String emptyMessage,
+    required bool isHistoryTab,
+  }) {
+    if (movies.isEmpty) {
+      return Center(
+        child: Text(emptyMessage, style: const TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 20),
+      child: GridView.builder(
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 120 / 200,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: movies.length,
+        itemBuilder: (context, index) {
+          final movieData = movies[index].data() as Map<String, dynamic>;
+          final int id = movieData['id'];
+
+          return _movieCard(context, id: id, isWatched: isHistoryTab);
+        },
+      ),
+    );
+  }
+
+  Widget _movieCard(
+    BuildContext context, {
+    required int id,
+    required bool isWatched,
+  }) {
     return FutureBuilder<Map<String, dynamic>>(
       future: TmdbApiService().getMovieDetails(id),
       builder: (context, snapshot) {
@@ -85,11 +171,7 @@ class MovieView extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => MovieInfo(movieId: id),
-                  ),
-                );
+                context.push('/movie-info/$id');
               },
               child: Container(
                 alignment: Alignment.topLeft,
@@ -123,9 +205,31 @@ class MovieView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               child: IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final newStatus = !isWatched;
+
+                  await DatabaseServices().toggleMovieWatchedStatus(
+                    movieId: id,
+                    isWatched: newStatus,
+                  );
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          newStatus
+                              ? 'Film History (İzlenenler) tabına taşındı!'
+                              : 'Film Unwatch (İzlenecekler) tabına geri alındı!',
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                },
                 icon: Icon(
-                  Icons.check_circle_outline_outlined,
+                  isWatched
+                      ? Icons.check_circle
+                      : Icons.check_circle_outline_outlined,
                   color: Colors.white,
                   size: 25,
                 ),

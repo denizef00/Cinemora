@@ -23,6 +23,39 @@ class AuthService {
         'email': email,
         'createdAt': FieldValue.serverTimestamp(),
       });
+      WriteBatch batch = _firestore.batch();
+      CollectionReference listsRef = _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('lists');
+
+      List<Map<String, dynamic>> defaultLists = [
+        {
+          'name': 'TV Series',
+          'type': 'tv',
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+        {
+          'name': 'Movies',
+          'type': 'movie',
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+        {
+          'name': 'Favorites',
+          'type': 'fav',
+          'isDefault': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+      ];
+
+      for (var list in defaultLists) {
+        DocumentReference newDoc = listsRef.doc();
+        batch.set(newDoc, list);
+      }
+      await batch.commit();
+
       return userCredential;
     } catch (e) {
       print('Kayit hatasi : $e');

@@ -1,10 +1,9 @@
 import 'package:cinemora/models/movie_model.dart';
 import 'package:cinemora/models/tvseries_model.dart';
-import 'package:cinemora/pages/info_view/movieinfo_view.dart';
-import 'package:cinemora/pages/info_view/tvseriesinfo_view.dart';
 import 'package:cinemora/services/tmdb_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchView extends ConsumerStatefulWidget {
   const SearchView({super.key});
@@ -239,12 +238,11 @@ class _SearchViewState extends ConsumerState<SearchView> {
   }) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) =>
-                isTvSeries ? TvSeriesInfo(tvId: id) : MovieInfo(movieId: id),
-          ),
-        );
+        if (isTvSeries) {
+          context.push('/tv-info/$id');
+        } else {
+          context.push('/movie-info/$id');
+        }
       },
       child: Container(
         width: 120,
