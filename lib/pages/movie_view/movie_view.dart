@@ -179,7 +179,7 @@ class MovieView extends StatelessWidget {
                 width: 120,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Colors.red,
+                  color: Theme.of(context).colorScheme.secondary,
                   image: posterUrl != null
                       ? DecorationImage(
                           image: NetworkImage(posterUrl),

@@ -134,7 +134,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                                 total: "1 Season",
                                 status: true,
                                 cast: {},
-                                color: Colors.red,
+                                color: Theme.of(context).colorScheme.secondary,
                                 isTvSeries: true,
                                 posterUrl: tv.fullPosterPath,
                               );
@@ -200,7 +200,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                                 total: "1h 59m",
                                 status: true,
                                 cast: {},
-                                color: Colors.red,
+                                color: Theme.of(context).colorScheme.secondary,
                                 isTvSeries: false,
                                 posterUrl: movie.fullPosterPath,
                               );

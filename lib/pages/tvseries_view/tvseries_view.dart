@@ -268,7 +268,7 @@ class TvseriesView extends StatelessWidget {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: Theme.of(context).colorScheme.secondary,
                   borderRadius: BorderRadius.circular(24),
                   image: backdropUrl.isNotEmpty
                       ? DecorationImage(
