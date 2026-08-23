@@ -244,11 +244,11 @@ class TvseriesView extends StatelessWidget {
     return FutureBuilder<Map<String, dynamic>>(
       future: TmdbApiService().getTvSeriesDetails(id),
       builder: (context, snapshot) {
-        String title = "Yükleniyor...";
+        String title = "Loading...";
         String? backdropPath;
-
+        List<dynamic> seasonsList = [];
         if (snapshot.hasData) {
-          title = snapshot.data!['name'] ?? 'Bilinmeyen Dizi';
+          title = snapshot.data!['name'] ?? 'Unknown Tv Series';
           backdropPath = snapshot.data!['backdrop_path'];
         }
 
@@ -354,20 +354,49 @@ class TvseriesView extends StatelessWidget {
               padding: const EdgeInsets.only(right: 10),
               child: IconButton(
                 onPressed: () async {
-                  final int nextEpisode = episode + 1;
+                  if (seasonsList.isEmpty) return;
+
+                  final currentSeasonData = seasonsList.firstWhere(
+                    (s) => s['season_number'] == season,
+                    orElse: () => null,
+                  );
+
+                  final int maxEpisodesThisSeason = currentSeasonData != null
+                      ? (currentSeasonData['episode_count'] ?? 0)
+                      : 0;
+
+                  final totalSeasons = seasonsList
+                      .where((s) => (s['season_number'] ?? 0) > 0)
+                      .length;
+
+                  int nextSeason = season;
+                  int nextEpisode = episode + 1;
+                  String message = '';
+
+                  if (nextEpisode > maxEpisodesThisSeason) {
+                    if (season < totalSeasons) {
+                      nextSeason = season + 1;
+                      nextEpisode = 1;
+                      message =
+                          '$title: Sezon $nextSeason, Bölüm 1\'e geçildi!';
+                    } else {
+                      nextEpisode = maxEpisodesThisSeason;
+                      message = '$title dizisini tamamladınız!';
+                    }
+                  } else {
+                    message = '$title: S$nextSeason E$nextEpisode izlendi!';
+                  }
 
                   await DatabaseServices().updateTvProgress(
                     tvId: id,
-                    newSeason: season,
+                    newSeason: nextSeason,
                     newEpisode: nextEpisode,
                   );
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                          '$title: S$season E$nextEpisode bölümüne geçildi!',
-                        ),
+                        content: Text(message),
                         duration: const Duration(seconds: 1),
                       ),
                     );

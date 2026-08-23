@@ -139,6 +139,45 @@ class DatabaseServices {
     }
   }
 
+  Future<void> incrementEpisode({
+    required String listId,
+    required String mediaDocId,
+    required int currentSeason,
+    required int currentEpisode,
+    required List<dynamic> seasonsData,
+  }) async {
+    final currentSeasonObj = seasonsData.firstWhere(
+      (s) => s['season_number'] == currentSeason,
+      orElse: () => null,
+    );
+
+    final int maxEpisodesInSeason = currentSeasonObj != null
+        ? currentSeasonObj['episode_count']
+        : 0;
+    final int totalSeasons = seasonsData
+        .where((s) => s['season_number'] > 0)
+        .length;
+
+    int nextEpisode = currentEpisode + 1;
+    int nextSeason = currentSeason;
+
+    if (nextEpisode > maxEpisodesInSeason) {
+      if (currentSeason < totalSeasons) {
+        nextSeason = currentSeason + 1;
+        nextEpisode = 1;
+      } else {
+        nextEpisode = maxEpisodesInSeason;
+      }
+    }
+
+    await FirebaseFirestore.instance
+        .collection('user_lists')
+        .doc(listId)
+        .collection('items')
+        .doc(mediaDocId)
+        .update({'currentSeason': nextSeason, 'currentEpisodes': nextEpisode});
+  }
+
   Future<bool> toggleFavorite({required Map<String, dynamic> mediaData}) async {
     try {
       String? uid = _auth.currentUser?.uid;

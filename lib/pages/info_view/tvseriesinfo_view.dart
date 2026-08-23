@@ -100,7 +100,7 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: Colors.red,
+                              color: Theme.of(context).colorScheme.surface,
                               image: backdropUrl.isNotEmpty
                                   ? DecorationImage(
                                       image: NetworkImage(backdropUrl),
