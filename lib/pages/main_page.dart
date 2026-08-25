@@ -15,37 +15,50 @@ class MainPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Container(
           decoration: BoxDecoration(
-            boxShadow: [BoxShadow(blurRadius: 20, offset: const Offset(0, 10))],
+            boxShadow: [BoxShadow(blurRadius: 50, offset: const Offset(0, 50))],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadiusGeometry.circular(24),
-            child: NavigationBar(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              selectedIndex: navigationShell.currentIndex,
-              indicatorColor: Colors.transparent,
-
-              labelBehavior:
-                  NavigationDestinationLabelBehavior.onlyShowSelected,
-              onDestinationSelected: navigationShell.goBranch,
-              destinations: [
-                NavigationDestination(icon: Icon(Icons.tv), label: 'TV Series'),
-                NavigationDestination(
-                  icon: Icon(Icons.movie_creation_outlined),
-                  label: 'Movies',
+            borderRadius: BorderRadiusGeometry.circular(50),
+            child: NavigationBarTheme(
+              data: NavigationBarThemeData(
+                labelTextStyle: WidgetStateProperty.all(
+                  const TextStyle(
+                    fontSize: 12,
+                    height: 1.0,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.search),
-                  label: 'Search',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.newspaper),
-                  label: 'News',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.account_circle_outlined),
-                  label: 'Profile',
-                ),
-              ],
+              ),
+              child: NavigationBar(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                selectedIndex: navigationShell.currentIndex,
+                indicatorColor: Colors.transparent,
+                labelBehavior:
+                    NavigationDestinationLabelBehavior.onlyShowSelected,
+                onDestinationSelected: navigationShell.goBranch,
+                destinations: [
+                  NavigationDestination(
+                    icon: Icon(Icons.tv),
+                    label: 'TV Series',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.movie_creation_outlined),
+                    label: 'Movies',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.search),
+                    label: 'Search',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.newspaper),
+                    label: 'News',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.account_circle_outlined),
+                    label: 'Profile',
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,3 +1,5 @@
+import 'package:cinemora/models/cast_model.dart';
+
 class MovieModel {
   final int id;
   final String title;
@@ -6,6 +8,7 @@ class MovieModel {
   final String? backdropPath;
   final double voteAverage;
   final String? releaseDate;
+  final List<CastModel> cast;
 
   MovieModel({
     required this.id,
@@ -15,9 +18,12 @@ class MovieModel {
     this.backdropPath,
     required this.voteAverage,
     this.releaseDate,
+    this.cast = const [],
   });
 
   factory MovieModel.fromJson(Map<String, dynamic> json) {
+    final castData =
+        (json['credits']?['cast'] ?? json['cast']) as List<dynamic>?;
     return MovieModel(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
@@ -26,6 +32,9 @@ class MovieModel {
       backdropPath: json['backdrop_path'],
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
       releaseDate: json['release_date'],
+      cast: castData != null
+          ? castData.map((e) => CastModel.fromJson(e)).toList()
+          : [],
     );
   }
 

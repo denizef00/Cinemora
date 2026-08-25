@@ -47,22 +47,34 @@ class TmdbApiService {
   }
 
   Future<Map<String, dynamic>> getMovieDetails(int movieId) async {
-    try {
-      final response = await _dio.get('/movie/$movieId');
-      return response.data;
-    } catch (e) {
-      print('Film detaylarini cekerken hata : $e ');
-      rethrow;
+    final String apiKey = dotenv.env['TMDB_API_KEY'] ?? '';
+
+    final url = Uri.parse(
+      'https://api.themoviedb.org/3/movie/$movieId?api_key=$apiKey&language=tr-TR&append_to_response=credits',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Film detayları yüklenemedi');
     }
   }
 
   Future<Map<String, dynamic>> getTvSeriesDetails(int tvId) async {
-    try {
-      final response = await _dio.get('/tv/$tvId');
-      return response.data;
-    } catch (e) {
-      print('Dizi detaylarini cekerken hata : $e ');
-      rethrow;
+    final String apiKey = dotenv.env['TMDB_API_KEY'] ?? '';
+
+    final url = Uri.parse(
+      'https://api.themoviedb.org/3/tv/$tvId?api_key=$apiKey&language=tr-TR&append_to_response=credits',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Dizi detayları yüklenemedi');
     }
   }
 
@@ -71,18 +83,34 @@ class TmdbApiService {
     int seasonNumber,
   ) async {
     final String apiKey = dotenv.env['TMDB_API_KEY'] ?? '';
-    final String baseUrl =
-        dotenv.env['TMDB_BASE_URL'] ?? 'https://api.themoviedb.org/3';
 
     final url = Uri.parse(
-      '$baseUrl/tv/$tvId/season/$seasonNumber?api_key=$apiKey&language=tr-TR',
+      'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber?api_key=$apiKey&language=tr-TR',
     );
 
     final response = await http.get(url);
+
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else {
+      throw Exception('Sezon detayları yüklenemedi');
     }
-    return {};
+  }
+
+  Future<List<dynamic>> getTvCast(int tvId) async {
+    final String apiKey = dotenv.env['TMDB_API_KEY'] ?? '';
+    final url = Uri.parse(
+      'https://api.themoviedb.org/3/tv/$tvId/credits?api_key=$apiKey&language=tr-TR',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['cast'] ?? []; // Oyuncu listesi
+    } else {
+      throw Exception('Oyuncu kadrosu yüklenemedi');
+    }
   }
 
   Future<List<dynamic>> searchMulti(String query) async {

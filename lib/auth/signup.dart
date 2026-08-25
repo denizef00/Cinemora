@@ -1,7 +1,7 @@
 import 'package:cinemora/auth/login.dart';
-import 'package:cinemora/pages/profile_view/profile_view.dart';
 import 'package:cinemora/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -18,7 +18,7 @@ class _SignupPageState extends State<SignupPage> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  void _handleSignUp() async {
+  void _handleSignUp(BuildContext context) async {
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty ||
         _usernameController.text.trim().isEmpty ||
@@ -50,10 +50,7 @@ class _SignupPageState extends State<SignupPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('Succesfully Sign Up!')));
       }
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => ProfileView()),
-        (route) => false,
-      );
+      context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,7 +252,11 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   SizedBox(height: 10),
                   GestureDetector(
-                    onTap: _isLoading ? null : _handleSignUp,
+                    onTap: () {
+                      if (_isLoading == false) {
+                        _handleSignUp(context);
+                      }
+                    },
                     child: Container(
                       alignment: Alignment.center,
                       height: 35,

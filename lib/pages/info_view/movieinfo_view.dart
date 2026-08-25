@@ -1,3 +1,5 @@
+import 'package:cinemora/models/cast_model.dart';
+import 'package:cinemora/models/movie_model.dart';
 import 'package:cinemora/services/database_services.dart';
 import 'package:cinemora/services/tmdb_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -52,6 +54,7 @@ class _MovieInfoState extends State<MovieInfo> {
               ),
             );
           }
+          final movieModel = MovieModel.fromJson(snapshot.data!);
           final movie = snapshot.data!;
           final String title = movie['title'] ?? '';
           final int runtimeMinutes = movie['runtime'] ?? 0;
@@ -325,7 +328,17 @@ class _MovieInfoState extends State<MovieInfo> {
 
                   const Divider(color: Colors.white24),
                   const SizedBox(height: 16),
-                  Center(child: Text('Cast')),
+                  const Text(
+                    'Cast',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildCastSection(movieModel.cast),
                   const SizedBox(height: 20),
                   const Divider(color: Colors.white24),
                   const SizedBox(height: 16),
@@ -358,6 +371,109 @@ class _MovieInfoState extends State<MovieInfo> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCastSection(List<CastModel> cast) {
+    if (cast.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          'Oyuncu bilgisi bulunamadı.',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Actor Sitesi')));
+      },
+      child: SizedBox(
+        height: 150,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: cast.length > 15 ? 15 : cast.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final actor = cast[index];
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 105,
+                height: 150,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      actor.fullProfilePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: const Color(0xFF1E293B),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white54,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.2),
+                            Colors.black.withOpacity(0.9),
+                          ],
+                          stops: const [0.4, 0.65, 1.0],
+                        ),
+                      ),
+                    ),
+
+                    Positioned(
+                      left: 8,
+                      right: 8,
+                      bottom: 8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            actor.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            actor.character,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

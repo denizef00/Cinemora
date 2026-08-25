@@ -9,18 +9,18 @@ class NewsView extends StatefulWidget {
 
 class _NewsViewState extends State<NewsView> {
   bool _firstisExpanded = false;
-  bool _secondisExpanded = false;
+  //bool _secondisExpanded = false;
 
   final int _firsttotalItem = 10;
-  final int _secondtotalItem = 10;
+  //final int _secondtotalItem = 10;
   @override
   Widget build(BuildContext context) {
     final firstdisplayCount = _firstisExpanded
         ? _firsttotalItem
         : (_firsttotalItem < 3 ? _firsttotalItem : 3);
-    final seconddisplayCount = _secondisExpanded
+    /*final seconddisplayCount = _secondisExpanded
         ? _secondtotalItem
-        : (_secondtotalItem < 3 ? _secondtotalItem : 3);
+        : (_secondtotalItem < 3 ? _secondtotalItem : 3);*/
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 50),
@@ -45,7 +45,7 @@ class _NewsViewState extends State<NewsView> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: firstdisplayCount,
                       itemBuilder: (context, index) {
-                        _upComingCard(
+                        return _upComingCard(
                           index,
                           context,
                           title: "Tv Series ${index + 1}",

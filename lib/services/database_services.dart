@@ -91,6 +91,54 @@ class DatabaseServices {
     }
   }
 
+  Future<void> toggleTvWatchedStatus({
+    required int tvId,
+    required bool isWatched,
+  }) async {
+    try {
+      String? uid = _auth.currentUser?.uid;
+      if (uid == null) return;
+
+      final listSnapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('lists')
+          .where('type', isEqualTo: 'tv')
+          .get();
+
+      if (listSnapshot.docs.isEmpty) return;
+
+      String tvListDocId = listSnapshot.docs.first.id;
+
+      final itemSnapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('lists')
+          .doc(tvListDocId)
+          .collection('items')
+          .where('id', isEqualTo: tvId)
+          .get();
+
+      if (itemSnapshot.docs.isNotEmpty) {
+        String itemDocId = itemSnapshot.docs.first.id;
+
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('lists')
+            .doc(tvListDocId)
+            .collection('items')
+            .doc(itemDocId)
+            .update({
+              'isWatched': isWatched,
+              'watchedAt': isWatched ? FieldValue.serverTimestamp() : null,
+            });
+      }
+    } catch (e) {
+      print('Dizi durumu güncellenirken hata: $e');
+    }
+  }
+
   Future<void> toggleMovieWatchedStatus({
     required int movieId,
     required bool isWatched,
@@ -146,13 +194,16 @@ class DatabaseServices {
     required int currentEpisode,
     required List<dynamic> seasonsData,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
     final currentSeasonObj = seasonsData.firstWhere(
       (s) => s['season_number'] == currentSeason,
       orElse: () => null,
     );
 
     final int maxEpisodesInSeason = currentSeasonObj != null
-        ? currentSeasonObj['episode_count']
+        ? (currentSeasonObj['episode_count'] ?? 0)
         : 0;
     final int totalSeasons = seasonsData
         .where((s) => s['season_number'] > 0)
@@ -160,6 +211,7 @@ class DatabaseServices {
 
     int nextEpisode = currentEpisode + 1;
     int nextSeason = currentSeason;
+    bool isFinished = false;
 
     if (nextEpisode > maxEpisodesInSeason) {
       if (currentSeason < totalSeasons) {
@@ -167,15 +219,52 @@ class DatabaseServices {
         nextEpisode = 1;
       } else {
         nextEpisode = maxEpisodesInSeason;
+        isFinished = true;
       }
     }
 
     await FirebaseFirestore.instance
-        .collection('user_lists')
+        .collection('users')
+        .doc(uid)
+        .collection('lists')
         .doc(listId)
         .collection('items')
         .doc(mediaDocId)
-        .update({'currentSeason': nextSeason, 'currentEpisodes': nextEpisode});
+        .update({
+          'currentSeason': nextSeason,
+          'currentEpisodes': nextEpisode,
+          'isWatched': isFinished,
+          if (isFinished) 'watchedAt': FieldValue.serverTimestamp(),
+        });
+  }
+
+  Future<void> setTvProgress({
+    required String listId,
+    required String mediaDocId,
+    required int targetSeason,
+    required int targetEpisode,
+    required bool isWatched,
+  }) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
+
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('lists')
+          .doc(listId)
+          .collection('items')
+          .doc(mediaDocId)
+          .update({
+            'currentSeason': targetSeason,
+            'currentEpisode': targetEpisode,
+            'isWatched': isWatched,
+            if (isWatched) 'watchedAt': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
+      print("setTvProgress Hatası: $e");
+    }
   }
 
   Future<bool> toggleFavorite({required Map<String, dynamic> mediaData}) async {
