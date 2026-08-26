@@ -145,9 +145,7 @@ class TvseriesView extends StatelessWidget {
                                               season:
                                                   tvData['currentSeason'] ?? 1,
                                               episode:
-                                                  tvData['currentEpisode'] +
-                                                      1 ??
-                                                  1,
+                                                  tvData['currentEpisode'] ?? 1,
                                               isHistory: false,
                                             );
                                           },
