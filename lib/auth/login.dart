@@ -23,7 +23,10 @@ class _LoginPageState extends State<LoginPage> {
     if (email.isEmpty || password.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email and password!')),
+        SnackBar(
+          content: Text('Please enter your email and password!'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
@@ -34,18 +37,24 @@ class _LoginPageState extends State<LoginPage> {
       await _authService.login(email: email, password: password);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Successfully Login!!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully Login!!'),
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+        ),
+      );
 
       if (context.canPop()) {
         context.pop();
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}!!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}!!'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -68,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.red,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -183,22 +192,28 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 45,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Colors.deepPurple,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: _isLoading
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         height: 20,
                                         width: 20,
                                         child: CircularProgressIndicator(
-                                          color: Colors.white,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.tertiary,
                                           strokeWidth: 2,
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Login',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.tertiary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),

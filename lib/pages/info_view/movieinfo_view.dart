@@ -105,7 +105,7 @@ class _MovieInfoState extends State<MovieInfo> {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: Colors.red,
+                              color: Theme.of(context).colorScheme.error,
                               image: backdropUrl.isNotEmpty
                                   ? DecorationImage(
                                       image: NetworkImage(backdropUrl),
@@ -133,8 +133,10 @@ class _MovieInfoState extends State<MovieInfo> {
                                   children: [
                                     Text(
                                       title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.tertiary,
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -142,8 +144,10 @@ class _MovieInfoState extends State<MovieInfo> {
                                     const SizedBox(height: 4),
                                     Text(
                                       '$formattedTime • ${status}',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.tertiary,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -158,9 +162,9 @@ class _MovieInfoState extends State<MovieInfo> {
                         top: 8,
                         left: 8,
                         child: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back_ios_new,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                           onPressed: () => Navigator.pop(context),
                         ),
@@ -244,10 +248,10 @@ class _MovieInfoState extends State<MovieInfo> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Show Details',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.tertiary,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -255,8 +259,8 @@ class _MovieInfoState extends State<MovieInfo> {
                           const SizedBox(height: 4),
                           Text(
                             '$releaseDate • $type',
-                            style: const TextStyle(
-                              color: Colors.grey,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onTertiary,
                               fontSize: 13,
                             ),
                           ),
@@ -267,14 +271,14 @@ class _MovieInfoState extends State<MovieInfo> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.redAccent,
+                            color: Theme.of(context).colorScheme.onSecondary,
                             width: 2.5,
                           ),
                         ),
                         child: Text(
                           rating,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.tertiary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -283,10 +287,11 @@ class _MovieInfoState extends State<MovieInfo> {
                   ),
 
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white24),
+                  Divider(color: Theme.of(context).colorScheme.onTertiary),
 
                   GestureDetector(
                     onTap: () {
+                      //silinecek bu
                       ScaffoldMessenger.of(
                         context,
                       ).showSnackBar(SnackBar(content: Text("Watch Trailer")));
@@ -326,12 +331,12 @@ class _MovieInfoState extends State<MovieInfo> {
                     ),
                   ),
 
-                  const Divider(color: Colors.white24),
+                  Divider(color: Theme.of(context).colorScheme.onTertiary),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Cast',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.tertiary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -340,12 +345,12 @@ class _MovieInfoState extends State<MovieInfo> {
 
                   _buildCastSection(movieModel.cast),
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white24),
+                  Divider(color: Theme.of(context).colorScheme.onTertiary),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Overview',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.tertiary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -355,13 +360,13 @@ class _MovieInfoState extends State<MovieInfo> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161F33),
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       overview.isNotEmpty ? overview : 'Açıklama bulunmuyor.',
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
                         height: 1.4,
                       ),
                     ),
@@ -377,17 +382,18 @@ class _MovieInfoState extends State<MovieInfo> {
 
   Widget _buildCastSection(List<CastModel> cast) {
     if (cast.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.0),
         child: Text(
           'Oyuncu bilgisi bulunamadı.',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
         ),
       );
     }
 
     return GestureDetector(
       onTap: () {
+        //silinecek bu
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Actor Sitesi')));
@@ -413,10 +419,10 @@ class _MovieInfoState extends State<MovieInfo> {
                       actor.fullProfilePath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFF1E293B),
-                        child: const Icon(
+                        color: Theme.of(context).colorScheme.surface,
+                        child: Icon(
                           Icons.person,
-                          color: Colors.white54,
+                          color: Theme.of(context).colorScheme.tertiary,
                           size: 36,
                         ),
                       ),
@@ -449,8 +455,8 @@ class _MovieInfoState extends State<MovieInfo> {
                             actor.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -460,8 +466,8 @@ class _MovieInfoState extends State<MovieInfo> {
                             actor.character,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary,
                               fontSize: 9.5,
                             ),
                           ),
@@ -576,7 +582,9 @@ class _MovieInfoState extends State<MovieInfo> {
                                   content: Text(
                                     'Added to "$listName" successfully!',
                                   ),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.errorContainer,
                                 ),
                               );
                             }
@@ -585,7 +593,9 @@ class _MovieInfoState extends State<MovieInfo> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to add: $e'),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
                                 ),
                               );
                             }
@@ -615,66 +625,4 @@ class _MovieInfoState extends State<MovieInfo> {
         return Icons.bookmark_border;
     }
   }
-
-  /*SizedBox _actorCard() {
-    return SizedBox(
-      height: 160,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: keys.length,
-        itemBuilder: (context, index) {
-          String realName = keys[index];
-
-          String charName = widget.cast[realName] ?? "Unknown";
-
-          return GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text("Actor Card")));
-            },
-            child: Container(
-              width: 120,
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Spacer(),
-                  Text(
-                    realName,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.tertiary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    charName,
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.tertiary.withValues(alpha: 0.8),
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }*/
 }

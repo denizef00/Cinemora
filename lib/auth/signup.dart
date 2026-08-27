@@ -26,12 +26,18 @@ class _SignupPageState extends State<SignupPage> {
       if (_passwordController.text.trim() !=
           _correctPasswordController.text.trim()) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please fill this all this sections!')),
+          SnackBar(
+            content: Text('Please fill this all this sections!'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Passwords not matched!!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Passwords not matched!!'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
       return;
     }
@@ -46,15 +52,21 @@ class _SignupPageState extends State<SignupPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Succesfully Sign Up!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Succesfully Sign Up!'),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          ),
+        );
       }
       context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed Sign Up! : ${e.toString()}')),
+          SnackBar(
+            content: Text('Failed Sign Up! : ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {
@@ -77,7 +89,7 @@ class _SignupPageState extends State<SignupPage> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.red,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -304,7 +316,9 @@ class _SignupPageState extends State<SignupPage> {
                                 height: 35,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Colors.deepPurple,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: _isLoading
@@ -350,7 +364,9 @@ class _SignupPageState extends State<SignupPage> {
                               },
                               child: Text(
                                 'I have an account!',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                ),
                               ),
                             ),
                           ],

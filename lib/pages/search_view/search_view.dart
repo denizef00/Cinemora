@@ -188,7 +188,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                       bottom: BorderSide(
                         color: _selectedSearchTab == 0
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white24,
+                            : Theme.of(context).colorScheme.onTertiary,
                         width: 2,
                       ),
                     ),
@@ -199,7 +199,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                       style: TextStyle(
                         color: _selectedSearchTab == 0
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white60,
+                            : Theme.of(context).colorScheme.onTertiary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -217,7 +217,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                       bottom: BorderSide(
                         color: _selectedSearchTab == 1
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white24,
+                            : Theme.of(context).colorScheme.onTertiary,
                         width: 2,
                       ),
                     ),
@@ -228,7 +228,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
                       style: TextStyle(
                         color: _selectedSearchTab == 1
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white60,
+                            : Theme.of(context).colorScheme.onTertiary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -292,8 +292,11 @@ class _SearchViewState extends ConsumerState<SearchView> {
                 : Container(
                     width: 45,
                     height: 65,
-                    color: Colors.grey[800],
-                    child: const Icon(Icons.movie, color: Colors.grey),
+                    color: Theme.of(context).colorScheme.onTertiary,
+                    child: Icon(
+                      Icons.movie,
+                      color: Theme.of(context).colorScheme.onTertiary,
+                    ),
                   ),
           ),
           title: Text(
@@ -504,8 +507,8 @@ class _SearchViewState extends ConsumerState<SearchView> {
                 title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.tertiary,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),

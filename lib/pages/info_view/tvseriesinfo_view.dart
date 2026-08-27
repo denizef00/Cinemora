@@ -146,8 +146,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                   children: [
                                     Text(
                                       title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.tertiary,
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -155,8 +157,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                     const SizedBox(height: 4),
                                     Text(
                                       '$totalSeason • ${isEnded ? "Ended" : "Continues"}',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.tertiary,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -171,9 +175,9 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                         top: 8,
                         left: 8,
                         child: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back_ios_new,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                           onPressed: () => Navigator.pop(context),
                         ),
@@ -323,10 +327,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Show Details',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.tertiary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -334,26 +338,26 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                             const SizedBox(height: 4),
                             Text(
                               '$firstAirDate • $type',
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onTertiary,
                                 fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.redAccent,
+                              color: Theme.of(context).colorScheme.primary,
                               width: 2.5,
                             ),
                           ),
                           child: Text(
                             voteAverage.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -362,9 +366,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                     ),
 
                     const SizedBox(height: 20),
-                    const Divider(color: Colors.white24),
+                    Divider(color: Theme.of(context).colorScheme.onTertiary),
                     GestureDetector(
                       onTap: () {
+                        //silinecek bu
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Watch Trailer")),
                         );
@@ -404,12 +409,12 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                       ),
                     ),
 
-                    const Divider(color: Colors.white24),
+                    Divider(color: Theme.of(context).colorScheme.onTertiary),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Cast',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.tertiary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -418,12 +423,12 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
 
                     _buildCastSection(tvModel.cast),
                     const SizedBox(height: 20),
-                    const Divider(color: Colors.white24),
+                    Divider(color: Theme.of(context).colorScheme.onTertiary),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Overview',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.tertiary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -433,13 +438,13 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161F33),
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         overview.isNotEmpty ? overview : 'Açıklama bulunmuyor.',
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.tertiary,
                           height: 1.4,
                         ),
                       ),
@@ -463,17 +468,18 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
 
   Widget _buildCastSection(List<CastModel> cast) {
     if (cast.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.0),
         child: Text(
           'Oyuncu bilgisi bulunamadı.',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
         ),
       );
     }
 
     return GestureDetector(
       onTap: () {
+        //silinecek bu
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Actor Sitesi')));
@@ -499,10 +505,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                       actor.fullProfilePath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFF1E293B),
-                        child: const Icon(
+                        color: Theme.of(context).colorScheme.surface,
+                        child: Icon(
                           Icons.person,
-                          color: Colors.white54,
+                          color: Theme.of(context).colorScheme.onTertiary,
                           size: 36,
                         ),
                       ),
@@ -535,8 +541,8 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                             actor.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -546,8 +552,8 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                             actor.character,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onTertiary,
                               fontSize: 9.5,
                             ),
                           ),
@@ -660,7 +666,9 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                   content: Text(
                                     'Added to "$listName" successfully!',
                                   ),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.errorContainer,
                                 ),
                               );
                             }
@@ -669,7 +677,9 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to add: $e'),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
                                 ),
                               );
                             }
@@ -709,23 +719,23 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
         .toList();
 
     if (validSeasons.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
           child: Text(
             'Bölüm bilgisi bulunamadı.',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
           ),
         ),
       );
     }
     if (currentUser == null) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
           child: Text(
             'Bölüm takibi için lütfen giriş yapın.',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
           ),
         ),
       );
@@ -740,10 +750,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
           .snapshots(),
       builder: (context, listSnap) {
         if (!listSnap.hasData || listSnap.data!.docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               'Dizi listeniz bulunamadı.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
             ),
           );
         }
@@ -795,7 +805,7 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161F33),
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Theme(
@@ -803,20 +813,22 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                       context,
                     ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
-                      collapsedIconColor: Colors.white70,
+                      collapsedIconColor: Theme.of(
+                        context,
+                      ).colorScheme.onTertiary,
                       iconColor: Theme.of(context).colorScheme.primary,
                       title: Text(
                         seasonName,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.tertiary,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       subtitle: Text(
                         '$episodeCount Episodes',
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onTertiary,
                           fontSize: 13,
                         ),
                       ),
@@ -832,17 +844,20 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                   ? Icons.check_circle
                                   : Icons.check_circle_outline_outlined,
                               color: isThisSeasonFullyWatched
-                                  ? Colors.greenAccent
-                                  : Colors.white54,
+                                  ? Theme.of(context).colorScheme.errorContainer
+                                  : Theme.of(context).colorScheme.onTertiary,
                               size: 24,
                             ),
                             onPressed: () async {
                               if (!isItemInList) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
                                       'Lütfen önce diziyi kütüphanenize ekleyin.',
                                     ),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
                                   ),
                                 );
                                 return;
@@ -858,7 +873,6 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                               bool targetWatched = false;
 
                               if (isThisSeasonFullyWatched) {
-                                // Sezon zaten tamamen izlendiyse: bu sezonu sıfırla (önceki sezonun sonuna ya da 0'a çek)
                                 if (seasonNumber > 1) {
                                   targetSeason = seasonNumber - 1;
                                   final prevSeason = validSeasons.firstWhere(
@@ -874,7 +888,6 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                 }
                                 targetWatched = false;
                               } else {
-                                // Sezon izlendi olarak işaretleniyor
                                 targetSeason = seasonNumber;
                                 targetEpisode = episodeCount;
                                 if (isLastSeason) {
@@ -899,12 +912,18 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                           : '$seasonName ${isThisSeasonFullyWatched ? "izlenmedi olarak güncellendi" : "tamamen izlendi olarak işaretlendi"}.',
                                     ),
                                     duration: const Duration(seconds: 1),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.errorContainer,
                                   ),
                                 );
                               }
                             },
                           ),
-                          const Icon(Icons.expand_more, color: Colors.white70),
+                          Icon(
+                            Icons.expand_more,
+                            color: Theme.of(context).colorScheme.onTertiary,
+                          ),
                         ],
                       ),
                       children: [
@@ -928,11 +947,15 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                 [];
 
                             if (episodes.isEmpty) {
-                              return const Padding(
+                              return Padding(
                                 padding: EdgeInsets.all(16.0),
                                 child: Text(
                                   'Bölümler yüklenemedi.',
-                                  style: TextStyle(color: Colors.white54),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onTertiary,
+                                  ),
                                 ),
                               );
                             }
@@ -945,8 +968,9 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                 vertical: 8,
                               ),
                               itemCount: episodes.length,
-                              separatorBuilder: (context, i) =>
-                                  const Divider(color: Colors.white10),
+                              separatorBuilder: (context, i) => Divider(
+                                color: Theme.of(context).colorScheme.onTertiary,
+                              ),
                               itemBuilder: (context, epIndex) {
                                 final episode = episodes[epIndex];
                                 final int epNumber =
@@ -982,15 +1006,19 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                         child: Container(
                                           width: 110,
                                           height: 65,
-                                          color: Colors.black26,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.surface,
                                           child: stillUrl.isNotEmpty
                                               ? Image.network(
                                                   stillUrl,
                                                   fit: BoxFit.cover,
                                                 )
-                                              : const Icon(
+                                              : Icon(
                                                   Icons.movie,
-                                                  color: Colors.white24,
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.onTertiary,
                                                 ),
                                         ),
                                       ),
@@ -1006,8 +1034,12 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 color: isThisEpWatched
-                                                    ? Colors.white70
-                                                    : Colors.white,
+                                                    ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.onTertiary
+                                                    : Theme.of(
+                                                        context,
+                                                      ).colorScheme.tertiary,
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 14,
                                               ),
@@ -1017,8 +1049,12 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                               isThisEpWatched ? 'WATCHED' : '',
                                               style: TextStyle(
                                                 color: isThisEpWatched
-                                                    ? Colors.white70
-                                                    : Colors.white,
+                                                    ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.onTertiary
+                                                    : Theme.of(
+                                                        context,
+                                                      ).colorScheme.tertiary,
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 14,
                                               ),
@@ -1033,8 +1069,12 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                               : Icons
                                                     .check_circle_outline_outlined,
                                           color: isThisEpWatched
-                                              ? Colors.greenAccent
-                                              : Colors.white54,
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.errorContainer
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.onTertiary,
                                           size: 26,
                                         ),
                                         onPressed: () async {
@@ -1042,10 +1082,13 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                                             ScaffoldMessenger.of(
                                               context,
                                             ).showSnackBar(
-                                              const SnackBar(
+                                              SnackBar(
                                                 content: Text(
                                                   'Lütfen önce diziyi kütüphanenize ekleyin.',
                                                 ),
+                                                backgroundColor: Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
                                               ),
                                             );
                                             return;

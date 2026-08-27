@@ -28,10 +28,12 @@ class MovieView extends StatelessWidget {
             ),
             Expanded(
               child: currentUser == null
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         "Kütüphanenizi görmek için lütfen giriş yapın.",
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onTertiary,
+                        ),
                       ),
                     )
                   : StreamBuilder<QuerySnapshot>(
@@ -123,7 +125,10 @@ class MovieView extends StatelessWidget {
   }) {
     if (movies.isEmpty) {
       return Center(
-        child: Text(emptyMessage, style: const TextStyle(color: Colors.grey)),
+        child: Text(
+          emptyMessage,
+          style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
+        ),
       );
     }
 
@@ -221,6 +226,9 @@ class MovieView extends StatelessWidget {
                               ? 'Film History (İzlenenler) tabına taşındı!'
                               : 'Film Unwatch (İzlenecekler) tabına geri alındı!',
                         ),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer,
                         duration: const Duration(seconds: 1),
                       ),
                     );
@@ -230,7 +238,7 @@ class MovieView extends StatelessWidget {
                   isWatched
                       ? Icons.check_circle
                       : Icons.check_circle_outline_outlined,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.tertiary,
                   size: 25,
                 ),
               ),

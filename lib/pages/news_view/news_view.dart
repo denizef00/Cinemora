@@ -50,7 +50,7 @@ class _NewsViewState extends State<NewsView> {
                           context,
                           title: "Tv Series ${index + 1}",
                           upcomingDate: "11/07/2026",
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.primary,
                         );
                       },
                     ),
@@ -99,7 +99,7 @@ class _NewsViewState extends State<NewsView> {
                         context,
                         title: "Movie ${index + 1}",
                         upcomingDate: "11/07/2026",
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     SizedBox(height: 5),
@@ -146,8 +146,8 @@ class _NewsViewState extends State<NewsView> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.tertiary,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -155,8 +155,8 @@ class _NewsViewState extends State<NewsView> {
               SizedBox(height: 10),
               Text(
                 upcomingDate,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.tertiary,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,

@@ -93,10 +93,14 @@ class TvseriesView extends StatelessWidget {
 
                             if (!itemsSnapshot.hasData ||
                                 itemsSnapshot.data!.docs.isEmpty) {
-                              return const Center(
+                              return Center(
                                 child: Text(
                                   "Kütüphanenizde henüz ekli dizi bulunmuyor.",
-                                  style: TextStyle(color: Colors.grey),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.tertiary,
+                                  ),
                                 ),
                               );
                             }
@@ -113,6 +117,7 @@ class TvseriesView extends StatelessWidget {
                                     children: [
                                       SizedBox(height: 15),
                                       _buildSectionTitle(
+                                        context,
                                         'Currently Watching',
                                         inProgressSeries.length,
                                       ),
@@ -151,10 +156,15 @@ class TvseriesView extends StatelessWidget {
                                           },
                                         ),
                                       SizedBox(height: 10),
-                                      const Divider(color: Colors.white24),
+                                      Divider(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onTertiary,
+                                      ),
                                       SizedBox(height: 10),
 
                                       _buildSectionTitle(
+                                        context,
                                         'Not Started Yet',
                                         unstartedSeries.length,
                                       ),
@@ -233,22 +243,22 @@ class TvseriesView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title, int count) {
+  Widget _buildSectionTitle(BuildContext context, String title, int count) {
     return Row(
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.tertiary,
           ),
         ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.redAccent,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -338,9 +348,9 @@ class TvseriesView extends StatelessWidget {
                               isHistory
                                   ? 'Tamamlandı'
                                   : 'Season: $season • Episode: $episode',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.white70,
+                                color: Theme.of(context).colorScheme.onTertiary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -369,13 +379,16 @@ class TvseriesView extends StatelessWidget {
                                 '$title dizisi TvSeries tabına geri alındı!',
                               ),
                               duration: const Duration(seconds: 1),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.errorContainer,
                             ),
                           );
                         }
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.check_circle,
-                        color: Colors.greenAccent,
+                        color: Theme.of(context).colorScheme.errorContainer,
                         size: 26,
                       ),
                     )
@@ -435,13 +448,16 @@ class TvseriesView extends StatelessWidget {
                             SnackBar(
                               content: Text(message),
                               duration: const Duration(seconds: 1),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
                             ),
                           );
                         }
                       },
                       icon: Icon(
                         Icons.add_circle_outline_outlined,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.tertiary,
                         size: 25,
                       ),
                     ),

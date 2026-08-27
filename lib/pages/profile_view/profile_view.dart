@@ -89,10 +89,15 @@ class _ProfileViewState extends State<ProfileView> {
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
                       },
-                      icon: const Icon(Icons.logout, color: Colors.red),
+                      icon: Icon(
+                        Icons.logout,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       label: const Text('Sign Out'),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -138,6 +143,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ],
                 ),
                 GestureDetector(
+                  //silinecek bu
                   onTap: () {
                     ScaffoldMessenger.of(
                       context,
@@ -146,10 +152,14 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.error,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.settings, color: Colors.white, size: 40),
+                    child: Icon(
+                      Icons.settings,
+                      color: Theme.of(context).colorScheme.tertiary,
+                      size: 40,
+                    ),
                   ),
                 ),
               ],
@@ -169,7 +179,7 @@ class _ProfileViewState extends State<ProfileView> {
           height: 100,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
