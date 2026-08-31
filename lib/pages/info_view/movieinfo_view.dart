@@ -4,6 +4,7 @@ import 'package:cinemora/services/database_services.dart';
 import 'package:cinemora/services/tmdb_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MovieInfo extends StatefulWidget {
   final int movieId;
@@ -371,6 +372,20 @@ class _MovieInfoState extends State<MovieInfo> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  Divider(color: Theme.of(context).colorScheme.onTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Similar Movies',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildSimilarSection(widget.movieId),
                 ],
               ),
             ),
@@ -624,5 +639,110 @@ class _MovieInfoState extends State<MovieInfo> {
       default:
         return Icons.bookmark_border;
     }
+  }
+
+  Widget _buildSimilarSection(int movieId) {
+    return FutureBuilder<List<MovieModel>>(
+      future: TmdbApiService().getSimilarMovies(movieId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'Benzer dizi bulunamadi.',
+              style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
+            ),
+          );
+        }
+
+        final List<MovieModel> shows = snapshot.data!;
+        return SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: shows.length > 15 ? 15 : shows.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final show = shows[index];
+              return GestureDetector(
+                onTap: () {
+                  context.push('/movie-info/${show.id}');
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    width: 105,
+                    height: 150,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          'https://image.tmdb.org/t/p/w500${show.posterPath ?? ''}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Theme.of(context).colorScheme.surface,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onTertiary,
+                                  size: 36,
+                                ),
+                              ),
+                        ),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.2),
+                                Colors.black.withOpacity(0.9),
+                              ],
+                              stops: const [0.4, 0.65, 1.0],
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          left: 8,
+                          right: 8,
+                          bottom: 8,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                show.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }

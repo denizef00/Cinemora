@@ -5,6 +5,7 @@ import 'package:cinemora/services/tmdb_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class TvSeriesInfo extends StatefulWidget {
   final int tvId;
@@ -17,7 +18,7 @@ class TvSeriesInfo extends StatefulWidget {
 class _TvSeriesInfoState extends State<TvSeriesInfo> {
   late Future<Map<String, dynamic>> _tvDetailsFuture;
   final Map<int, List<dynamic>> _cachedSeasons = {};
-  final Set<int> _loadingSeasons = {};
+  //final Set<int> _loadingSeasons = {};
 
   Future<List<dynamic>> _loadSeasonEpisodes(int tvId, int seasonNumber) async {
     if (_cachedSeasons.containsKey(seasonNumber)) {
@@ -68,8 +69,10 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
           final String? backdropPath = tvModel.backdropPath;
           final String? posterPath = tvModel.posterPath;
           final double voteAverage = tvModel.voteAverage;
+          final String rating = '%${(voteAverage * 10).toInt()}';
           final String firstAirDate = tvModel.firstAirDate ?? 'Bilinmiyor';
           final String overview = tvModel.overview;
+
           // Ham json'dan kalan alanlar:
           final int seasonsCount = snapshot.data!['number_of_seasons'] ?? 0;
           final String totalSeason =
@@ -355,7 +358,7 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                             ),
                           ),
                           child: Text(
-                            voteAverage.toString(),
+                            rating,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.tertiary,
                               fontWeight: FontWeight.bold,
@@ -438,7 +441,7 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -449,6 +452,19 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    Divider(color: Theme.of(context).colorScheme.onTertiary),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Similar Tv Series',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSimilarSection(widget.tvId),
                   ] else ...[
                     _buildEpisodesSection(
                       currentUser: FirebaseAuth.instance.currentUser,
@@ -463,6 +479,111 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildSimilarSection(int tvId) {
+    return FutureBuilder<List<TvseriesModel>>(
+      future: TmdbApiService().getSimilarTvSeries(tvId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'Benzer dizi bulunamadi.',
+              style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
+            ),
+          );
+        }
+
+        final List<TvseriesModel> shows = snapshot.data!;
+        return SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: shows.length > 15 ? 15 : shows.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final show = shows[index];
+              return GestureDetector(
+                onTap: () {
+                  context.push('/tv-info/${show.id}');
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    width: 105,
+                    height: 150,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          'https://image.tmdb.org/t/p/w500${show.posterPath ?? ''}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Theme.of(context).colorScheme.surface,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onTertiary,
+                                  size: 36,
+                                ),
+                              ),
+                        ),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.2),
+                                Colors.black.withOpacity(0.9),
+                              ],
+                              stops: const [0.4, 0.65, 1.0],
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          left: 8,
+                          right: 8,
+                          bottom: 8,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                show.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

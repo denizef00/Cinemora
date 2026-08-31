@@ -316,9 +316,7 @@ class _SignupPageState extends State<SignupPage> {
                                 height: 35,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
+                                  color: Theme.of(context).colorScheme.primary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: _isLoading

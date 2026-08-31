@@ -192,9 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 45,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
+                                  color: Theme.of(context).colorScheme.primary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: _isLoading

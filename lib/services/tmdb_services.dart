@@ -107,7 +107,7 @@ class TmdbApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['cast'] ?? []; // Oyuncu listesi
+      return data['cast'] ?? [];
     } else {
       throw Exception('Oyuncu kadrosu yüklenemedi');
     }
@@ -138,5 +138,71 @@ class TmdbApiService {
           .toList();
     }
     return [];
+  }
+
+  Future<List<TvseriesModel>> getSimilarTvSeries(int tvId) async {
+    try {
+      var response = await _dio.get(
+        '/tv/$tvId/recommendations',
+        queryParameters: {'language': 'en-US'},
+      );
+
+      List<dynamic> results = response.data['results'] ?? [];
+
+      if (results.isEmpty) {
+        response = await _dio.get(
+          '/tv/$tvId/similar',
+          queryParameters: {'language': 'en-US'},
+        );
+        results = response.data['results'] ?? [];
+      }
+
+      final List<TvseriesModel> list = [];
+      for (var json in results.take(10)) {
+        try {
+          list.add(TvseriesModel.fromJson(json));
+        } catch (parseError) {
+          continue;
+        }
+      }
+
+      return list;
+    } catch (e) {
+      print('--> TMDb İstek hatası: $e');
+      return [];
+    }
+  }
+
+  Future<List<MovieModel>> getSimilarMovies(int movieId) async {
+    try {
+      var response = await _dio.get(
+        '/movie/$movieId/recommendations',
+        queryParameters: {'language': 'en-US'},
+      );
+
+      List<dynamic> results = response.data['results'] ?? [];
+
+      if (results.isEmpty) {
+        response = await _dio.get(
+          '/movie/$movieId/similar',
+          queryParameters: {'language': 'en-US'},
+        );
+        results = response.data['results'] ?? [];
+      }
+
+      final List<MovieModel> list = [];
+      for (var json in results.take(10)) {
+        try {
+          list.add(MovieModel.fromJson(json));
+        } catch (parseError) {
+          continue;
+        }
+      }
+
+      return list;
+    } catch (e) {
+      print('--> TMDb İstek hatası: $e');
+      return [];
+    }
   }
 }
