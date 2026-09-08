@@ -4,7 +4,7 @@ import 'package:cinemora/pages/info_view/movieinfo_view.dart';
 import 'package:cinemora/pages/info_view/tvseriesinfo_view.dart';
 import 'package:cinemora/pages/main_page.dart';
 import 'package:cinemora/pages/movie_view/movie_view.dart';
-import 'package:cinemora/pages/news_view/news_view.dart';
+//import 'package:cinemora/pages/news_view/news_view.dart';
 import 'package:cinemora/pages/profile_view/profile_view.dart';
 import 'package:cinemora/pages/search_view/search_view.dart';
 import 'package:cinemora/pages/tvseries_view/tvseries_view.dart';
@@ -18,7 +18,7 @@ class AppRoutes {
   static const String tvseries = "/tvseries";
   static const String movies = "/movies";
   static const String search = "/";
-  static const String news = "/news";
+  //static const String news = "/news";
   static const String profile = "/profile";
   static const String login = "/login";
   static const String signup = "/signup";
@@ -85,6 +85,7 @@ final router = GoRouter(
             ),
           ],
         ),
+        /*
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -92,7 +93,7 @@ final router = GoRouter(
               builder: (context, state) => const NewsView(),
             ),
           ],
-        ),
+        ),*/
         StatefulShellBranch(
           routes: [
             GoRoute(

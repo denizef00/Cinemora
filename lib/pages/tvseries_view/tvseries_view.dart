@@ -122,6 +122,17 @@ class TvseriesView extends StatelessWidget {
                                         inProgressSeries.length,
                                       ),
                                       SizedBox(height: 10),
+                                      Text(
+                                        'En son izlenmis olan bolum gosteriliyor!!',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontStyle: FontStyle.italic,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.tertiary,
+                                        ),
+                                      ),
+                                      SizedBox(height: 10),
 
                                       if (inProgressSeries.isEmpty)
                                         Padding(
@@ -283,6 +294,7 @@ class TvseriesView extends StatelessWidget {
         String title = "Loading...";
         String? backdropPath;
         List<dynamic> seasonsList = [];
+
         if (snapshot.hasData) {
           title = snapshot.data!['name'] ?? 'Unknown Tv Series';
           backdropPath = snapshot.data!['backdrop_path'];
@@ -450,7 +462,7 @@ class TvseriesView extends StatelessWidget {
                               duration: const Duration(seconds: 1),
                               backgroundColor: Theme.of(
                                 context,
-                              ).colorScheme.error,
+                              ).colorScheme.errorContainer,
                             ),
                           );
                         }

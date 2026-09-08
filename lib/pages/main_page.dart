@@ -49,10 +49,11 @@ class MainPage extends StatelessWidget {
                     icon: Icon(Icons.search),
                     label: 'Search',
                   ),
+                  /*
                   NavigationDestination(
                     icon: Icon(Icons.newspaper),
                     label: 'News',
-                  ),
+                  ),*/
                   NavigationDestination(
                     icon: Icon(Icons.account_circle_outlined),
                     label: 'Profile',

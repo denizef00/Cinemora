@@ -926,7 +926,7 @@ class _TvSeriesInfoState extends State<TvSeriesInfo> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                    color: Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Theme(
