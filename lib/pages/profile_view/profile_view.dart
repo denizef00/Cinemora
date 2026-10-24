@@ -258,29 +258,38 @@ class _ProfileViewState extends State<ProfileView> {
             ? 'https://image.tmdb.org/t/p/w500$posterPath'
             : null;
 
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            height: 100,
-            width: 70,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary,
-              image: posterUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(posterUrl),
-                      fit: BoxFit.cover,
+        return GestureDetector(
+          onTap: () {
+            if (isTv) {
+              context.push('/tv-info/${snapshot.data!['id']}');
+            } else {
+              context.push('/movie-info/${snapshot.data!['id']}');
+            }
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 100,
+              width: 70,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary,
+                image: posterUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(posterUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: (snapshot.connectionState == ConnectionState.waiting)
+                  ? const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
-                  : null,
+                  : (posterUrl == null ? _errorPlaceholder() : null),
             ),
-            child: (snapshot.connectionState == ConnectionState.waiting)
-                ? const Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : (posterUrl == null ? _errorPlaceholder() : null),
           ),
         );
       },
