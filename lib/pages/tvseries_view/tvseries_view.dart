@@ -17,7 +17,7 @@ class TvseriesView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         child: Column(
           children: [
-            TabBar(
+            const TabBar(
               tabs: [
                 Tab(text: "TvSeries"),
                 Tab(text: "History"),
@@ -27,7 +27,7 @@ class TvseriesView extends StatelessWidget {
               child: currentUser == null
                   ? const Center(
                       child: Text(
-                        'Kutuphanenizi gormek icin lutfen giris yapiniz',
+                        'Kütüphanenizi görmek için lütfen giriş yapınız.',
                       ),
                     )
                   : StreamBuilder<QuerySnapshot>(
@@ -71,24 +71,38 @@ class TvseriesView extends StatelessWidget {
 
                             final allDocs = itemsSnapshot.data?.docs ?? [];
 
+                            // Tamamlanmamış diziler
                             final unwatchDocs = allDocs.where((doc) {
                               final data = doc.data();
                               return (data['isWatched'] ?? false) == false;
                             }).toList();
 
+                            // History (Tamamlananlar)
                             final historyDocs = allDocs.where((doc) {
                               final data = doc.data();
                               return (data['isWatched'] ?? false) == true;
                             }).toList();
 
+                            // 1. Currently Watching
                             final inProgressSeries = unwatchDocs.where((doc) {
                               final data = doc.data();
-                              return (data['currentEpisode'] ?? 0) > 0;
+                              final isStopped = data['isStopped'] ?? false;
+                              return !isStopped &&
+                                  (data['currentEpisode'] ?? 0) > 0;
                             }).toList();
 
+                            // 2. Watching Stopped
+                            final stoppedSeries = unwatchDocs.where((doc) {
+                              final data = doc.data();
+                              return (data['isStopped'] ?? false) == true;
+                            }).toList();
+
+                            // 3. Not Started Yet
                             final unstartedSeries = unwatchDocs.where((doc) {
                               final data = doc.data();
-                              return (data['currentEpisode'] ?? 0) == 0;
+                              final isStopped = data['isStopped'] ?? false;
+                              return !isStopped &&
+                                  (data['currentEpisode'] ?? 0) == 0;
                             }).toList();
 
                             if (!itemsSnapshot.hasData ||
@@ -115,32 +129,23 @@ class TvseriesView extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      SizedBox(height: 15),
+                                      const SizedBox(height: 15),
+
+                                      // --- CURRENTLY WATCHING SECTION ---
                                       _buildSectionTitle(
                                         context,
                                         'Currently Watching',
                                         inProgressSeries.length,
                                       ),
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'En son izlenmis olan bolum gosteriliyor!!',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontStyle: FontStyle.italic,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.tertiary,
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
 
+                                      const SizedBox(height: 10),
                                       if (inProgressSeries.isEmpty)
-                                        Padding(
+                                        const Padding(
                                           padding: EdgeInsets.symmetric(
                                             vertical: 10,
                                           ),
                                           child: Text(
-                                            'Su an izlemekte oldugunuz bir dizi yok.',
+                                            'Şu an izlemekte olduğunuz bir dizi yok.',
                                           ),
                                         )
                                       else
@@ -151,7 +156,7 @@ class TvseriesView extends StatelessWidget {
                                           padding: EdgeInsets.zero,
                                           itemCount: inProgressSeries.length,
                                           separatorBuilder: (context, index) =>
-                                              SizedBox(height: 15),
+                                              const SizedBox(height: 15),
                                           itemBuilder: (context, index) {
                                             final tvData =
                                                 inProgressSeries[index].data();
@@ -166,27 +171,77 @@ class TvseriesView extends StatelessWidget {
                                             );
                                           },
                                         ),
-                                      SizedBox(height: 10),
+
+                                      const SizedBox(height: 10),
                                       Divider(
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.onTertiary,
                                       ),
-                                      SizedBox(height: 10),
+                                      const SizedBox(height: 10),
 
+                                      // --- WATCHING STOPPED SECTION ---
+                                      _buildSectionTitle(
+                                        context,
+                                        'Watching Stopped',
+                                        stoppedSeries.length,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      if (stoppedSeries.isEmpty)
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 10,
+                                          ),
+                                          child: Text(
+                                            'İzlemeyi bıraktığınız dizi bulunmuyor.',
+                                          ),
+                                        )
+                                      else
+                                        ListView.separated(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          padding: EdgeInsets.zero,
+                                          itemCount: stoppedSeries.length,
+                                          separatorBuilder: (context, index) =>
+                                              const SizedBox(height: 15),
+                                          itemBuilder: (context, index) {
+                                            final tvData = stoppedSeries[index]
+                                                .data();
+                                            return _tvseriesCard(
+                                              context,
+                                              id: tvData['id'],
+                                              season:
+                                                  tvData['currentSeason'] ?? 1,
+                                              episode:
+                                                  tvData['currentEpisode'] ?? 0,
+                                              isHistory: false,
+                                            );
+                                          },
+                                        ),
+
+                                      const SizedBox(height: 10),
+                                      Divider(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onTertiary,
+                                      ),
+                                      const SizedBox(height: 10),
+
+                                      // --- NOT STARTED YET SECTION ---
                                       _buildSectionTitle(
                                         context,
                                         'Not Started Yet',
                                         unstartedSeries.length,
                                       ),
-                                      SizedBox(height: 10),
+                                      const SizedBox(height: 10),
                                       if (unstartedSeries.isEmpty)
-                                        Padding(
+                                        const Padding(
                                           padding: EdgeInsets.symmetric(
                                             vertical: 10,
                                           ),
                                           child: Text(
-                                            'Baslanmamis dizi bulunmuyor.',
+                                            'Başlanmamış dizi bulunmuyor.',
                                           ),
                                         )
                                       else
@@ -197,7 +252,7 @@ class TvseriesView extends StatelessWidget {
                                           padding: EdgeInsets.zero,
                                           itemCount: unstartedSeries.length,
                                           separatorBuilder: (context, index) =>
-                                              SizedBox(height: 15),
+                                              const SizedBox(height: 15),
                                           itemBuilder: (context, index) {
                                             final tvData =
                                                 unstartedSeries[index].data();
@@ -215,28 +270,32 @@ class TvseriesView extends StatelessWidget {
                                     ],
                                   ),
                                 ),
+
+                                // --- HISTORY TAB ---
                                 historyDocs.isEmpty
                                     ? const Center(
                                         child: Text(
-                                          'Henuz tamamlanmis veya izlenmis bir dizi yok!',
+                                          'Henüz tamamlanmış veya izlenmiş bir dizi yok!',
                                         ),
                                       )
                                     : ListView.separated(
-                                        padding: EdgeInsets.symmetric(
+                                        padding: const EdgeInsets.symmetric(
                                           vertical: 16,
                                         ),
-                                        physics: BouncingScrollPhysics(),
+                                        physics: const BouncingScrollPhysics(),
                                         itemCount: historyDocs.length,
                                         separatorBuilder: (context, index) =>
-                                            SizedBox(height: 15),
+                                            const SizedBox(height: 15),
                                         itemBuilder: (context, index) {
                                           final tvData = historyDocs[index]
                                               .data();
                                           return _tvseriesCard(
                                             context,
                                             id: tvData['id'],
-                                            season: tvData['currentSeason'],
-                                            episode: tvData['currentEpisode'],
+                                            season:
+                                                tvData['currentSeason'] ?? 1,
+                                            episode:
+                                                tvData['currentEpisode'] ?? 1,
                                             isHistory: true,
                                           );
                                         },
@@ -248,6 +307,7 @@ class TvseriesView extends StatelessWidget {
                       },
                     ),
             ),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -295,7 +355,7 @@ class TvseriesView extends StatelessWidget {
         String? backdropPath;
         List<dynamic> seasonsList = [];
 
-        if (snapshot.hasData) {
+        if (snapshot.hasData && snapshot.data != null) {
           title = snapshot.data!['name'] ?? 'Unknown Tv Series';
           backdropPath = snapshot.data!['backdrop_path'];
           seasonsList = snapshot.data!['seasons'] ?? [];
@@ -306,175 +366,344 @@ class TvseriesView extends StatelessWidget {
             ? 'https://image.tmdb.org/t/p/w780$backdropPath'
             : '';
 
-        return Stack(
-          alignment: Alignment.centerRight,
-          children: [
-            GestureDetector(
-              onTap: () {
-                context.push('/tv-info/$id');
-              },
-              child: Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(24),
-                  image: backdropUrl.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(backdropUrl),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Colors.black.withOpacity(0.85),
-                        Colors.black.withOpacity(0.4),
-                      ],
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 20,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+        // --- 1. ÖNCE SIRADAKİ DOĞRU SEZON VE BÖLÜMÜ HESAPLIYORUZ ---
+        int displaySeason = season;
+        int displayEpisode = episode + 1;
+
+        if (seasonsList.isNotEmpty) {
+          final currentSeasonData = seasonsList.firstWhere(
+            (s) => s['season_number'] == season,
+            orElse: () => null,
+          );
+
+          final int maxEpisodesThisSeason = currentSeasonData != null
+              ? (currentSeasonData['episode_count'] ?? 0)
+              : 0;
+
+          if (maxEpisodesThisSeason > 0 && (episode >= maxEpisodesThisSeason)) {
+            final totalSeasons = seasonsList
+                .where((s) => (s['season_number'] ?? 0) > 0)
+                .length;
+
+            if (season < totalSeasons) {
+              displaySeason = season + 1;
+              displayEpisode = 1;
+            } else {
+              displayEpisode = maxEpisodesThisSeason;
+            }
+          }
+        }
+
+        // Bölüm İlerleme Fonksiyonu
+        Future<void> onIncrementEpisode() async {
+          if (seasonsList.isEmpty) return;
+
+          final currentSeasonData = seasonsList.firstWhere(
+            (s) => s['season_number'] == season,
+            orElse: () => null,
+          );
+
+          final int maxEpisodesThisSeason = currentSeasonData != null
+              ? (currentSeasonData['episode_count'] ?? 0)
+              : 0;
+
+          final totalSeasons = seasonsList
+              .where((s) => (s['season_number'] ?? 0) > 0)
+              .length;
+
+          int nextSeason = season;
+          int nextEpisode = episode + 1;
+          String message = '';
+
+          if (nextEpisode > maxEpisodesThisSeason) {
+            if (season < totalSeasons) {
+              nextSeason = season + 1;
+              nextEpisode = 1;
+              message = '$title: Sezon $nextSeason, Bölüm 1\'e geçildi!';
+            } else {
+              nextEpisode = maxEpisodesThisSeason;
+              message =
+                  '$title dizisini tamamladınız ve History tabına taşındı!';
+
+              await DatabaseServices().toggleTvWatchedStatus(
+                tvId: id,
+                isWatched: true,
+              );
+            }
+          } else {
+            message = '$title: S$nextSeason E$nextEpisode izlendi!';
+          }
+
+          await DatabaseServices().updateTvProgress(
+            tvId: id,
+            newSeason: nextSeason,
+            newEpisode: nextEpisode,
+          );
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                duration: const Duration(seconds: 1),
+                backgroundColor: Theme.of(context).colorScheme.errorContainer,
+              ),
+            );
+          }
+        }
+
+        // --- 2. DOĞRU SEZON İÇİN BÖLÜM İSMİNİ ÇEKİYORUZ ---
+        return FutureBuilder<Map<String, dynamic>>(
+          // Yanlış olan 'season' yerine doğru hesaplanan 'displaySeason' veriyoruz:
+          future: TmdbApiService().getTvSeasonDetails(id, displaySeason),
+          builder: (context, seasonSnapshot) {
+            String episodeTitle = '';
+
+            if (seasonSnapshot.hasData && seasonSnapshot.data != null) {
+              final episodes =
+                  seasonSnapshot.data!['episodes'] as List<dynamic>? ?? [];
+              final currentEpisodeData = episodes.firstWhere(
+                (ep) => ep['episode_number'] == displayEpisode,
+                orElse: () => null,
+              );
+
+              if (currentEpisodeData != null) {
+                episodeTitle = currentEpisodeData['name'] ?? '';
+
+                // Türkçe boş veya varsayılan "Bölüm X" gibi gelirse kontrol et
+                if (episodeTitle.isEmpty ||
+                    episodeTitle.startsWith('Episode ')) {
+                  episodeTitle = currentEpisodeData['name'] ?? '';
+                }
+
+                // Karakter Sınırlama (18 Karakter)
+                if (episodeTitle.length > 18) {
+                  episodeTitle = '${episodeTitle.substring(0, 18)}...';
+                }
+              }
+            }
+
+            Widget buildCardWithButton() {
+              return Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      context.push('/tv-info/$id');
+                    },
+                    child: Container(
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary,
+                        borderRadius: BorderRadius.circular(24),
+                        image: backdropUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(backdropUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Colors.black.withOpacity(0.85),
+                              Colors.black.withOpacity(0.4),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Text(
-                              isHistory
-                                  ? 'Tamamlandı'
-                                  : 'Season: $season • Episode: $episode',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).colorScheme.onTertiary,
-                                fontWeight: FontWeight.w500,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              RichText(
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                text: TextSpan(
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  children: [
+                                    TextSpan(text: title),
+                                    if (episodeTitle.isNotEmpty &&
+                                        !isHistory) ...[
+                                      const TextSpan(text: ' - '),
+                                      TextSpan(
+                                        text: episodeTitle,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontStyle: FontStyle.italic,
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.white.withOpacity(0.8),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                isHistory
+                                    ? 'Tamamlandı'
+                                    : 'Sıradaki: Sezon $displaySeason Bölüm $displayEpisode',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onTertiary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: isHistory
+                        ? IconButton(
+                            tooltip: "İzleneceklere geri taşı",
+                            onPressed: () async {
+                              await DatabaseServices().toggleTvWatchedStatus(
+                                tvId: id,
+                                isWatched: false,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '$title dizisi TvSeries tabına geri alındı!',
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.errorContainer,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: Icon(
+                              Icons.check_circle,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.errorContainer,
+                              size: 26,
+                            ),
+                          )
+                        : IconButton(
+                            tooltip: 'Bölümü izlendi işaretle',
+                            onPressed: onIncrementEpisode,
+                            icon: Icon(
+                              Icons.add_circle_outline_outlined,
+                              color: Theme.of(context).colorScheme.tertiary,
+                              size: 25,
+                            ),
+                          ),
+                  ),
+                ],
+              );
+            }
+
+            if (isHistory) {
+              return buildCardWithButton();
+            }
+
+            return Dismissible(
+              key: Key('tv_card_$id'),
+              direction: DismissDirection.horizontal,
+              background: Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 20),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(24),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: isHistory
-                  ? IconButton(
-                      tooltip: "İzleneceklere geri taşı",
-                      onPressed: () async {
-                        await DatabaseServices().toggleTvWatchedStatus(
-                          tvId: id,
-                          isWatched: false,
-                        );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '$title dizisi TvSeries tabına geri alındı!',
-                              ),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.errorContainer,
-                            ),
-                          );
-                        }
-                      },
-                      icon: Icon(
-                        Icons.check_circle,
-                        color: Theme.of(context).colorScheme.errorContainer,
-                        size: 26,
-                      ),
-                    )
-                  : IconButton(
-                      tooltip: 'Bolumu izlendi isaretle',
-                      onPressed: () async {
-                        if (seasonsList.isEmpty) return;
-
-                        final currentSeasonData = seasonsList.firstWhere(
-                          (s) => s['season_number'] == season,
-                          orElse: () => null,
-                        );
-
-                        final int maxEpisodesThisSeason =
-                            currentSeasonData != null
-                            ? (currentSeasonData['episode_count'] ?? 0)
-                            : 0;
-
-                        final totalSeasons = seasonsList
-                            .where((s) => (s['season_number'] ?? 0) > 0)
-                            .length;
-
-                        int nextSeason = season;
-                        int nextEpisode = episode + 1;
-                        String message = '';
-
-                        if (nextEpisode > maxEpisodesThisSeason) {
-                          if (season < totalSeasons) {
-                            nextSeason = season + 1;
-                            nextEpisode = 1;
-                            message =
-                                '$title: Sezon $nextSeason, Bölüm 1\'e geçildi!';
-                          } else {
-                            nextEpisode = maxEpisodesThisSeason;
-
-                            message =
-                                '$title dizisini tamamladınız ve History tabına taşındı!';
-
-                            await DatabaseServices().toggleTvWatchedStatus(
-                              tvId: id,
-                              isWatched: true,
-                            );
-                          }
-                        } else {
-                          message =
-                              '$title: S$nextSeason E$nextEpisode izlendi!';
-                        }
-
-                        await DatabaseServices().updateTvProgress(
-                          tvId: id,
-                          newSeason: nextSeason,
-                          newEpisode: nextEpisode,
-                        );
-
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(message),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.errorContainer,
-                            ),
-                          );
-                        }
-                      },
-                      icon: Icon(
-                        Icons.add_circle_outline_outlined,
-                        color: Theme.of(context).colorScheme.tertiary,
-                        size: 25,
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.add_circle_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Bölümü İzle',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-            ),
-          ],
+                  ],
+                ),
+              ),
+              secondaryBackground: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'İzlemeyi Bırak',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.pause_circle_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ],
+                ),
+              ),
+              confirmDismiss: (direction) async {
+                if (direction == DismissDirection.startToEnd) {
+                  await onIncrementEpisode();
+                  return false;
+                } else if (direction == DismissDirection.endToStart) {
+                  await DatabaseServices().toggleTvStoppedStatus(
+                    tvId: id,
+                    isStopped: true,
+                  );
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '$title izlemeyi bıraktıklarınıza taşındı.',
+                        ),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer,
+                      ),
+                    );
+                  }
+                  return false;
+                }
+                return false;
+              },
+              child: buildCardWithButton(),
+            );
+          },
         );
       },
     );

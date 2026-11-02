@@ -1,3 +1,4 @@
+import 'package:cinemora/services/tmdb_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -36,6 +37,59 @@ class DatabaseServices {
         .collection('items')
         .doc(mediaId)
         .set({...mediaData, 'addedAt': FieldValue.serverTimestamp()});
+  }
+
+  Future<void> addItemToList({
+    required String listId,
+    required int itemId,
+    required bool isTvSeries,
+  }) async {
+    try {
+      String? uid = _auth.currentUser?.uid;
+      if (uid == null) throw Exception('Kullanıcı oturum açmamış!');
+
+      Map<String, dynamic> mediaData = {};
+
+      if (isTvSeries) {
+        final tvDetails = await TmdbApiService().getTvSeriesDetails(itemId);
+        mediaData = {
+          'id': itemId,
+          'type': 'tv',
+          'title': tvDetails['name'] ?? '',
+          'posterPath': tvDetails['poster_path'],
+          'backdropPath': tvDetails['backdrop_path'],
+          'currentSeason': 1,
+          'currentEpisode': 0,
+          'isWatched': false,
+          'isStopped': false,
+        };
+      } else {
+        final movieDetails = await TmdbApiService().getMovieDetails(itemId);
+        mediaData = {
+          'id': itemId,
+          'type': 'movie',
+          'title': movieDetails['title'] ?? '',
+          'posterPath': movieDetails['poster_path'],
+          'backdropPath': movieDetails['backdrop_path'],
+          'isWatched': false,
+        };
+      }
+
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('lists')
+          .doc(listId)
+          .collection('items')
+          .doc(itemId.toString())
+          .set({
+            ...mediaData,
+            'addedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+    } catch (e) {
+      print('Listeye medya ekleme hatası: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateTvProgress({
@@ -336,5 +390,32 @@ class DatabaseServices {
               .snapshots()
               .map((doc) => doc.exists);
         });
+  }
+
+  Future<void> toggleTvStoppedStatus({
+    required int tvId,
+    required bool isStopped,
+  }) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final listSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('lists')
+        .where('type', isEqualTo: 'tv')
+        .get();
+
+    if (listSnapshot.docs.isNotEmpty) {
+      final tvListDocId = listSnapshot.docs.first.id;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('lists')
+          .doc(tvListDocId)
+          .collection('items')
+          .doc(tvId.toString())
+          .update({'isStopped': isStopped});
+    }
   }
 }

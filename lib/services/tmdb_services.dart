@@ -78,6 +78,21 @@ class TmdbApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getTvSeasonDetails(
+    int tvId,
+    int seasonNumber,
+  ) async {
+    final String apiKey = dotenv.env['TMDB_API_KEY'] ?? '';
+    final url = Uri.parse(
+      'https://api.themoviedb.org/3/tv/$tvId/season/$seasonNumber?api_key=$apiKey&language=tr-TR',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    return {};
+  }
+
   Future<Map<String, dynamic>> getSeasonDetails(
     int tvId,
     int seasonNumber,

@@ -133,7 +133,7 @@ class MovieView extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       child: GridView.builder(
         physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

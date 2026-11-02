@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:cinemora/models/movie_model.dart';
 import 'package:cinemora/models/tvseries_model.dart';
+import 'package:cinemora/services/database_services.dart';
 import 'package:cinemora/services/tmdb_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class SearchView extends ConsumerStatefulWidget {
   const SearchView({super.key});
+
   @override
   ConsumerState<SearchView> createState() => _SearchViewState();
 }
@@ -21,6 +25,87 @@ class _SearchViewState extends ConsumerState<SearchView> {
   List<dynamic> _tvResults = [];
   bool _isLoading = false;
   Timer? _debounce;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 50),
+        child: Column(
+          children: [
+            // Search Bar
+            Container(
+              height: 50,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiary,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.surface,
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 5,
+                          ),
+                          border: InputBorder.none,
+                          hintText: 'Search...',
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.onTertiary,
+                          ),
+                        ),
+                        onChanged: _onSearchChanged,
+                      ),
+                    ),
+                    if (_textController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _textController.clear();
+                          _onSearchChanged('');
+                        },
+                        child: Icon(
+                          Icons.clear,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            _textController.text.trim().isNotEmpty
+                ? _buildSearchResults()
+                : _buildDefaultTopLists(),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -72,90 +157,159 @@ class _SearchViewState extends ConsumerState<SearchView> {
     });
   }
 
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
+  void _showAddToLibraryBottomSheet({
+    required BuildContext context,
+    required int itemId,
+    required bool isTvSeries,
+  }) {
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-  @override
-  void initState() {
-    super.initState();
-  }
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen önce giriş yapınız.')),
+      );
+      return;
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 50),
-        child: Column(
-          children: [
-            // Search Bar
-            Container(
-              height: 50,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiary,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        maxLines: 1,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.surface,
-                          fontSize: 16,
-                        ),
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 5,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          ),
-                          hintText: 'Search...',
-                          hintStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.onTertiary,
-                          ),
-                        ),
-                        onChanged: _onSearchChanged,
-                      ),
-                    ),
-                    if (_textController.text.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          _textController.clear();
-                          _onSearchChanged('');
-                        },
-                        child: Icon(
-                          Icons.clear,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.surface,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            _textController.text.trim().isNotEmpty
-                ? _buildSearchResults()
-                : _buildDefaultTopLists(),
-          ],
-        ),
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add to Library',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 10),
+
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('lists')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  final allLists = snapshot.data?.docs ?? [];
+
+                  // İçerik türüne göre filtreleme yapıyoruz:
+                  final userLists = allLists.where((listDoc) {
+                    final listData =
+                        listDoc.data() as Map<String, dynamic>? ?? {};
+                    final listType = listData['type'] ?? 'custom';
+
+                    if (isTvSeries) {
+                      return listType != 'movie'; // Dizi için filmleri gizle
+                    } else {
+                      return listType != 'tv'; // Film için dizileri gizle
+                    }
+                  }).toList();
+
+                  if (userLists.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text('Uygun kütüphane listesi bulunamadı.'),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: userLists.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final listDoc = userLists[index];
+                      final listData =
+                          listDoc.data() as Map<String, dynamic>? ?? {};
+
+                      final listName = listData['name'] ?? 'Liste';
+                      final listType = listData['type'] ?? 'custom';
+
+                      IconData iconData = Icons.bookmark_border;
+                      Color iconColor = Theme.of(context).colorScheme.primary;
+
+                      if (listType == 'tv') {
+                        iconData = Icons.tv;
+                        iconColor = Colors.redAccent;
+                      } else if (listType == 'favorites' ||
+                          listName.toString().toLowerCase().contains(
+                            'favorite',
+                          )) {
+                        iconData = Icons.favorite;
+                        iconColor = Colors.pinkAccent;
+                      } else if (listType == 'movie') {
+                        iconData = Icons.movie;
+                        iconColor = Colors.blueAccent;
+                      }
+
+                      return ListTile(
+                        leading: Icon(iconData, color: iconColor),
+                        title: Text(
+                          listName,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () async {
+                            Navigator.pop(context);
+
+                            await DatabaseServices().addItemToList(
+                              listId: listDoc.id,
+                              itemId: itemId,
+                              isTvSeries: isTvSeries,
+                            );
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Added to "$listName" successfully!',
+                                  ),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.errorContainer,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -238,7 +392,6 @@ class _SearchViewState extends ConsumerState<SearchView> {
             ),
           ],
         ),
-
         _selectedSearchTab == 0
             ? _buildResultList(_movieResults, isTv: false)
             : _buildResultList(_tvResults, isTv: true),
@@ -313,7 +466,17 @@ class _SearchViewState extends ConsumerState<SearchView> {
               fontSize: 12,
             ),
           ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          // Arama listesindeki sağ buton: Kütüphaneye Ekle
+          trailing: IconButton(
+            icon: const Icon(Icons.add_circle_outline, size: 22),
+            onPressed: () {
+              _showAddToLibraryBottomSheet(
+                context: context,
+                itemId: item['id'],
+                isTvSeries: isTv,
+              );
+            },
+          ),
           onTap: () {
             final id = item['id'];
             if (isTv) {
@@ -331,15 +494,13 @@ class _SearchViewState extends ConsumerState<SearchView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(' Top TV Series For This Week'),
-        const SizedBox(height: 5),
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: Theme.of(context).colorScheme.secondary,
-          ),
+        const Text(
+          ' Top TV Series For This Week',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 190,
           child: FutureBuilder<List<TvseriesModel>>(
             future: _apiService.getPopularTvShows(),
             builder: (context, snapshot) {
@@ -358,48 +519,44 @@ class _SearchViewState extends ConsumerState<SearchView> {
               }
 
               final tvShows = snapshot.data ?? [];
-              if (tvShows.isEmpty)
-                return const Center(child: Text('Dizi Bulunamadi'));
-
-              return SizedBox(
-                height: 100,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: tvShows.map((tv) {
-                      return _topCard(
-                        context,
-                        id: tv.id,
-                        title: tv.name,
-                        overview: tv.overview,
-                        years: tv.firstAirDate ?? 'Bilinmiyor',
-                        type: "Tv Series",
-                        rating: "%${(tv.voteAverage * 10).toInt()}",
-                        total: "1 Season",
-                        status: true,
-                        cast: {},
-                        color: Theme.of(context).colorScheme.secondary,
-                        isTvSeries: true,
-                        posterUrl: tv.fullPosterPath,
-                      );
-                    }).toList(),
-                  ),
+              if (tvShows.isEmpty) {
+                return const Center(child: Text('Dizi Bulunamadı'));
+              }
+              final limitedTvShows = tvShows.take(10).toList();
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: limitedTvShows.map((tv) {
+                    return _topCard(
+                      context,
+                      id: tv.id,
+                      title: tv.name,
+                      overview: tv.overview,
+                      years: tv.firstAirDate ?? 'Bilinmiyor',
+                      type: "Tv Series",
+                      rating: "%${(tv.voteAverage * 10).toInt()}",
+                      total: "1 Season",
+                      status: true,
+                      cast: {},
+                      color: Theme.of(context).colorScheme.secondary,
+                      isTvSeries: true,
+                      posterUrl: tv.fullPosterPath,
+                    );
+                  }).toList(),
                 ),
               );
             },
           ),
         ),
-        const SizedBox(height: 20),
-        const Text(' Top Movies For This Week'),
-        const SizedBox(height: 5),
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: Theme.of(context).colorScheme.secondary,
-          ),
+        const SizedBox(height: 24),
+        const Text(
+          ' Top Movies For This Week',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 190,
           child: FutureBuilder<List<MovieModel>>(
             future: _apiService.getPopularMovies(),
             builder: (context, snapshot) {
@@ -409,7 +566,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
               if (snapshot.hasError) {
                 return Center(
                   child: Text(
-                    'Filmler Yuklenemedi',
+                    'Filmler Yüklenemedi',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -418,33 +575,31 @@ class _SearchViewState extends ConsumerState<SearchView> {
               }
 
               final movies = snapshot.data ?? [];
-              if (movies.isEmpty)
-                return const Center(child: Text('Film Bulunamadi'));
-
-              return SizedBox(
-                height: 100,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: movies.map((movie) {
-                      return _topCard(
-                        context,
-                        id: movie.id,
-                        title: movie.title,
-                        overview: movie.overview,
-                        years: movie.releaseDate ?? 'Bilinmiyor',
-                        type: "Movie",
-                        rating: "%${(movie.voteAverage * 10).toInt()}",
-                        total: "1h 59m",
-                        status: true,
-                        cast: {},
-                        color: Theme.of(context).colorScheme.secondary,
-                        isTvSeries: false,
-                        posterUrl: movie.fullPosterPath,
-                      );
-                    }).toList(),
-                  ),
+              if (movies.isEmpty) {
+                return const Center(child: Text('Film Bulunamadı'));
+              }
+              final limitedMovies = movies.take(10).toList();
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: limitedMovies.map((movie) {
+                    return _topCard(
+                      context,
+                      id: movie.id,
+                      title: movie.title,
+                      overview: movie.overview,
+                      years: movie.releaseDate ?? 'Bilinmiyor',
+                      type: "Movie",
+                      rating: "%${(movie.voteAverage * 10).toInt()}",
+                      total: "1h 59m",
+                      status: true,
+                      cast: {},
+                      color: Theme.of(context).colorScheme.secondary,
+                      isTvSeries: false,
+                      posterUrl: movie.fullPosterPath,
+                    );
+                  }).toList(),
                 ),
               );
             },
@@ -454,6 +609,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
     );
   }
 
+  // --- Sağ Üst Köşesinde Kütüphaneye Ekle Butonu Bulunan Kart ---
   Widget _topCard(
     BuildContext context, {
     required int id,
@@ -479,7 +635,8 @@ class _SearchViewState extends ConsumerState<SearchView> {
       },
       child: Container(
         width: 120,
-        margin: const EdgeInsets.only(right: 10),
+        height: 180,
+        margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(16),
@@ -490,32 +647,57 @@ class _SearchViewState extends ConsumerState<SearchView> {
                 )
               : null,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-            ),
-          ),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+        child: Stack(
+          children: [
+            // Arka Plan Karartma Gradyanı ve Başlık
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.85)],
                 ),
-                textAlign: TextAlign.center,
+              ),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
-          ),
+
+            // Sağ Üst Köşedeki Kütüphaneye Ekle (+) Butonu
+            Positioned(
+              top: 6,
+              right: 6,
+              child: GestureDetector(
+                onTap: () {
+                  _showAddToLibraryBottomSheet(
+                    context: context,
+                    itemId: id,
+                    isTvSeries: isTvSeries,
+                  );
+                },
+                child: Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

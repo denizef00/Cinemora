@@ -12,7 +12,7 @@ class MainPage extends StatelessWidget {
 
       body: navigationShell,
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Container(
           decoration: BoxDecoration(
             boxShadow: [BoxShadow(blurRadius: 50, offset: const Offset(0, 50))],
@@ -31,6 +31,8 @@ class MainPage extends StatelessWidget {
               ),
               child: NavigationBar(
                 backgroundColor: Theme.of(context).colorScheme.secondary,
+                height: 55,
+
                 selectedIndex: navigationShell.currentIndex,
                 indicatorColor: Colors.transparent,
                 labelBehavior:
